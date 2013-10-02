@@ -6,8 +6,10 @@ class State
 public:
 	State(std::vector<std::string>* map, std::string path, State* parent, std::vector<std::pair<int,int>> boxes, std::pair<int,int> player);
 	~State(void);
-	std::vector<State> getChildStates();
+	bool operator == (const State &b) const;
+	std::vector<State*> getChildStates();
 	bool isLocked();
+	bool isWin();
 	int getHeuristicValue();
 	int getHash();
 	std::string getPath();
