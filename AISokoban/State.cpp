@@ -1,7 +1,7 @@
 #include "State.h"
 
 
-State::State(std::vector<std::string>* map, std::string path, State* parent, std::vector<std::pair<int,int>> boxes, std::pair<int,int> player) : map(map), path(path), parent(parent), boxes(boxes), player(player)
+State::State(std::vector<std::string>* map, std::string path, State* parent, std::set<std::pair<int,int>> boxes, std::pair<int,int> player) : map(map), path(path), parent(parent), boxes(boxes), player(player)
 {
 	// Think of pathLength more of a total heuristic value, as we aren't interested in the shortest path, only in the one 
 	// that leads us to the goal the fastest, i.e. lowest total heuristic value (fewest box-moves?)
@@ -28,11 +28,9 @@ bool State::operator == (const State &b) const
 		return false;
 	}*/
 
-	for(unsigned int i=0;i<boxes.size();i++)
+	for(auto it=boxes.begin();it!=boxes.end();it++)
 	{
-		if(boxes[i].first!=b.boxes[i].first || boxes[i].second!=b.boxes[i].second){
-			return false;
-		}
+		if(b.boxes.find(*it) == b.boxes.end()) return false;
 	}
 
 	if(player.first!=b.player.first || player.second!=b.player.second){
@@ -58,9 +56,18 @@ bool State::isLocked()
 bool State::isWin()
 {
 	// TODO: Needs to be efficient, as this is checked every expansion
-	// Shouldn't the heurisitc value be 0 if we just consider the distance of each box to a goal?
+	// Shouldn't the heurisitc value be 0 for a winning state if we just consider the distance of each box to a goal?
 	
 	return this->getHeuristicValue() == 0;
+
+	// Alternative 
+
+	for(unsigned int i=0;i<Constants::Goals.size();i++) 
+	{
+		if(this->boxes.find(Constants::Goals[i]) == this->boxes.end()) return false;
+	}
+	
+	return true;
 }
 
 int State::getHeuristicValue()
@@ -73,9 +80,10 @@ int State::getHash()
 {
 	int count = boxes.size()<15 ? boxes.size() : 15; // do not take into account more than 15 box so make hash computation faster.
 	int hash = player.first+(player.second*3);
-	for(int i=0;i<count;i++)
+	int i=0;
+	for(auto it=boxes.begin();i<count;it++,i++)
 	{
-		hash = 65599 * hash + boxes[i].first+(boxes[i].second*3);
+		hash = 65599 * hash + (*it).first+((*it).second*3);
 	}
 	return hash;
 }

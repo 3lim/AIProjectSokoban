@@ -1,4 +1,7 @@
+#pragma once
 #include <vector>
-struct {
-	std::vector<std::pair<int,int>> Goals;
-} Constants;
+class Constants
+{
+public:
+	static std::vector<std::pair<int,int>> Goals;
+};

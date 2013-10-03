@@ -1,10 +1,13 @@
 #pragma once
 #include <vector>
 #include <list>
+#include <set>
+#include "Constants.h"
+
 class State
 {
 public:
-	State(std::vector<std::string>* map, std::string path, State* parent, std::vector<std::pair<int,int>> boxes, std::pair<int,int> player);
+	State(std::vector<std::string>* map, std::string path, State* parent, std::set<std::pair<int,int>> boxes, std::pair<int,int> player);
 	~State(void);
 	bool operator == (const State &b) const;
 	std::vector<State*> getChildStates();
@@ -18,7 +21,7 @@ public:
 
 	static std::vector<std::pair<int,int>> goals;
 private:
-	std::vector<std::pair<int,int>> boxes;
+	std::set<std::pair<int,int>> boxes;
 	std::pair<int,int> player;
 	std::string path;
 	State* parent;

@@ -5,16 +5,17 @@
 #include <queue>
 #include <iostream>
 #include <unordered_set>
+#include <set>
 #include <string>
 
 namespace std {
   template <>
   struct hash<State*>
   {
-    std::size_t operator()(State* const& state) const
-    {
-      return state->getHash();
-    }
+	std::size_t operator()(State* const& state) const
+	{
+	  return state->getHash();
+	}
   };
 
   template <> struct equal_to<State*> : binary_function <State*,State*,bool> {
@@ -41,7 +42,7 @@ int main(void)
 	for (std::string line; std::getline(std::cin, line);)
 		board.push_back(line);
 		
-	std::vector<std::pair<int,int>> boxes;
+	std::set<std::pair<int,int>> boxes;
 	std::vector<std::pair<int,int>> goals;
 	std::pair<int,int> player;
 
@@ -61,10 +62,10 @@ int main(void)
 						  goals.push_back(pos);
 						  board[y][x] = '.';
 						  break;
-				case '$': boxes.push_back(pos);
+				case '$': boxes.insert(pos);
 						  board[y][x] = ' ';
 						  break;
-				case '*': boxes.push_back(pos);
+				case '*': boxes.insert(pos);
 						  goals.push_back(pos);
 						  board[y][x] = '.';
 						  break;
@@ -73,7 +74,7 @@ int main(void)
 	}
 
 	State* initState = new State(&board,"",NULL,boxes,player);
-	Constants.Goals = goals;
+	Constants::Goals = goals;
 	
 	State* endState = NULL;
 
