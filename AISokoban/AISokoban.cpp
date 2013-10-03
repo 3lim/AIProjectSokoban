@@ -1,6 +1,7 @@
 // AISokoban.cpp : Definiert den Einstiegspunkt für die Konsolenanwendung.
 //
 #include "State.h"
+#include "Constants.h"
 #include <queue>
 #include <iostream>
 #include <unordered_set>
@@ -40,9 +41,39 @@ int main(void)
 	for (std::string line; std::getline(std::cin, line);)
 		board.push_back(line);
 		
+	std::vector<std::pair<int,int>> boxes;
+	std::vector<std::pair<int,int>> goals;
+	std::pair<int,int> player;
 
-	//TODO init state with grid 
-	State* initState;
+	for(unsigned int y = 0; y < board.size(); y++)
+	{
+		for(unsigned int x = 0; x < board[y].size(); x++)
+		{
+			std::pair<int,int> pos(x,y);
+			switch(board[y][x])
+			{
+				case '@': player = pos;
+						  board[y][x] = ' ';
+						  break;
+				case '.': goals.push_back(pos);
+						  break;
+				case '+': player = pos;
+						  goals.push_back(pos);
+						  board[y][x] = '.';
+						  break;
+				case '$': boxes.push_back(pos);
+						  board[y][x] = ' ';
+						  break;
+				case '*': boxes.push_back(pos);
+						  goals.push_back(pos);
+						  board[y][x] = '.';
+						  break;
+			}
+		}
+	}
+
+	State* initState = new State(&board,"",NULL,boxes,player);
+	Constants.Goals = goals;
 	
 	State* endState = NULL;
 
@@ -89,14 +120,7 @@ int main(void)
 			else
 			{
 				//check if lock state
-				if((*it)->isLocked())
-				{
-					continue;
-				}
-				else
-				{
-					currentStates.emplace((*it));
-				}
+				if(!(*it)->isLocked()) currentStates.push(*it);
 			}
 		}
 		

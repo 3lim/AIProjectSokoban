@@ -3,13 +3,23 @@
 
 State::State(std::vector<std::string>* map, std::string path, State* parent, std::vector<std::pair<int,int>> boxes, std::pair<int,int> player) : map(map), path(path), parent(parent), boxes(boxes), player(player)
 {
-	pathLength = path.size() + parent->getPathLength();
+	// Think of pathLength more of a total heuristic value, as we aren't interested in the shortest path, only in the one 
+	// that leads us to the goal the fastest, i.e. lowest total heuristic value (fewest box-moves?)
+
+	pathLength = this->getHeuristicValue() + (parent == NULL ? 0 : parent->getHeuristicValue());
+	
+	//pathLength = path.size() + (parent == NULL ? 0 : parent->getPathLength());
 }
 
 
 State::~State(void)
 {
 }
+
+// IMPORTANT
+// I think we shouldn't compare the player position, instead we should compare if the movable area is identical
+// So if in several states the position of the boxes is identical but the states are reached by pushing different boxes
+// the state aren't regarded as identical even if the same child states could be reached
 
 bool State::operator == (const State &b) const
 {
@@ -47,8 +57,10 @@ bool State::isLocked()
 
 bool State::isWin()
 {
-	//TODO: implement me
-	return false;
+	// TODO: Needs to be efficient, as this is checked every expansion
+	// Shouldn't the heurisitc value be 0 if we just consider the distance of each box to a goal?
+	
+	return this->getHeuristicValue() == 0;
 }
 
 int State::getHeuristicValue()
@@ -70,7 +82,7 @@ int State::getHash()
 
 std::string State::getPath()
 {
-	return parent->getPath().append(path);
+	return parent == NULL ? path : parent->getPath().append(path);
 }
 
 State* State::getParent()
@@ -82,5 +94,8 @@ State* State::getParent()
 
 int State::getPathLength()
 {
-	return parent->getPathLength()+path.size();
+	return pathLength;
+
+	// Should be computed just one time as this doesn't change during search
+	//return parent->getPathLength()+path.size();
 }

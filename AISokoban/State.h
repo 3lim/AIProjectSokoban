@@ -15,6 +15,8 @@ public:
 	std::string getPath();
 	State* getParent();
 	int getPathLength();
+
+	static std::vector<std::pair<int,int>> goals;
 private:
 	std::vector<std::pair<int,int>> boxes;
 	std::pair<int,int> player;
