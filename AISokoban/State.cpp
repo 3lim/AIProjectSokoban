@@ -70,8 +70,7 @@ int State::getHash()
 
 std::string State::getPath()
 {
-	//TODO: implement me
-	return "";
+	return parent->getPath().append(path);
 }
 
 State* State::getParent()
@@ -83,6 +82,5 @@ State* State::getParent()
 
 int State::getPathLength()
 {
-	//TODO: implement me
-	return 0;
+	return parent->getPathLength()+path.size();
 }
