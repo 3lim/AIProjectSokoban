@@ -2,6 +2,7 @@
 #include <vector>
 #include <list>
 #include <set>
+#include <string>
 #include "Constants.h"
 
 class State
@@ -29,3 +30,8 @@ private:
 	int pathLength;
 };
 
+struct Node
+{
+    std::pair<int,int> node;
+    std::string path; // path travelled to reach this node
+};
