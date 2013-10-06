@@ -159,6 +159,19 @@ std::vector<State*> State::getChildStates()
 bool State::isLocked()
 {
 	//TODO: implement me
+	for(auto it=boxes.begin();it!=boxes.end();it++)
+	{
+		// Box in corner
+		if((*map)[it->second][it->first-1] == '#')
+		{
+			if((*map)[it->second-1][it->first] == '#' || (*map)[it->second+1][it->first] == '#') return true;
+		}
+		if((*map)[it->second][it->first+1] == '#')
+		{
+			if((*map)[it->second-1][it->first] == '#' || (*map)[it->second+1][it->first] == '#') return true;
+		}
+	}
+
 	return false;
 }
 
