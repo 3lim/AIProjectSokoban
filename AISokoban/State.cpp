@@ -74,6 +74,8 @@ std::vector<State*> State::getChildStates()
         visitedStates.push_back(visitedStatesLine);
     }
     
+    cout << visitedStates.size() << endl;
+    
     while (frontier.size() != 0)
     {
         
@@ -81,78 +83,115 @@ std::vector<State*> State::getChildStates()
         Node observedNode = frontier.front();
         frontier.erase(frontier.begin());
         
-        if ((*map)[observedNode.node.first][observedNode.node.second]!='#' && boxes.find(observedNode.node) == boxes.end() && visitedStates[observedNode.node.first][observedNode.node.second]!=1)
+        if ((*map)[observedNode.node.second][observedNode.node.first]!='#' && boxes.find(observedNode.node) == boxes.end() && visitedStates[observedNode.node.second][observedNode.node.first]!=1)
         {
             //UP CASE
-            pair<int,int> upNodePosition(observedNode.node.first-1,observedNode.node.second);
+            pair<int,int> upNodePosition(observedNode.node.first,observedNode.node.second-1);
             Node upNode = {upNodePosition,observedNode.path+'U'};
-            pair<int, int> doubleUpPosition(observedNode.node.first-2,observedNode.node.second);
-            if (boxes.find(upNode.node) != boxes.end() && (*map)[doubleUpPosition.first][doubleUpPosition.second] !='#' && boxes.find(doubleUpPosition) == boxes.end()) //If the slot above the player position contains a box, a child state is created where the box has been pushed up
+            pair<int, int> doubleUpPosition(observedNode.node.first,observedNode.node.second-2);
+            if (boxes.find(upNode.node) != boxes.end() && (*map)[doubleUpPosition.second][doubleUpPosition.first] !='#' && boxes.find(doubleUpPosition) == boxes.end()) //If the slot above the player position contains a box, a child state is created where the box has been pushed up
             {
                 pair<int,int> boxFound= upNode.node;
                 set<pair<int,int>> newBoxes = boxes;
                 newBoxes.erase(boxFound);
                 newBoxes.insert(doubleUpPosition);
-                State child(map,path+upNode.path,this,newBoxes,boxFound);
-                children.push_back(&child);
+                State* child = 0;
+                child = new State(map,path+upNode.path,this,newBoxes,boxFound);
+                children.push_back(child);
+                child->print();
+                cout << child->path << endl;
+                cout << "play pos (" << boxFound.first << "," << boxFound.second <<")" << endl;
+                set<pair<int,int>>::iterator itt;
+                for (itt = newBoxes.begin(); itt != newBoxes.end(); itt++)
+                {
+                    cout << "pos of box (" << (*itt).first <<","<< (*itt).second<<")" << endl;
+                }
                 numberOfChild++;
             }
             frontier.push_back(upNode);
             
             //RIGHT CASE
-            pair<int,int> rightPosition(observedNode.node.first,observedNode.node.second+1);
+            pair<int,int> rightPosition(observedNode.node.first+1,observedNode.node.second);
             Node rightNode = {rightPosition,observedNode.path+'R'};
-            pair<int, int> doubleRightPosition(observedNode.node.first,observedNode.node.second+2);
-            if (boxes.find(rightNode.node) != boxes.end() && (*map)[doubleRightPosition.first][doubleRightPosition.second] !='#' && boxes.find(doubleRightPosition) == boxes.end()) //If the slot on the right of the player position contains a box and the move is possible a child state is created where the box has been pushed right
+            pair<int, int> doubleRightPosition(observedNode.node.first+2,observedNode.node.second);
+            if (boxes.find(rightNode.node) != boxes.end() && (*map)[doubleRightPosition.second][doubleRightPosition.first] !='#' && boxes.find(doubleRightPosition) == boxes.end()) //If the slot on the right of the player position contains a box and the move is possible a child state is created where the box has been pushed right
             {
                 pair<int,int> boxFound = rightNode.node;
                 set<pair<int,int>> newBoxes = boxes;
                 newBoxes.erase(boxFound);
                 newBoxes.insert(doubleRightPosition);
-                State child(map,path+rightNode.path,this,newBoxes,boxFound);
-                children.push_back(&child);
+                State* child = 0;
+                child = new State(map,path+rightNode.path,this,newBoxes,boxFound);
+                children.push_back(child);
+                child->print();
+                cout << child->path << endl;
+                cout << "play pos (" << boxFound.first << "," << boxFound.second <<")" << endl;
+                set<pair<int,int>>::iterator itt;
+                for (itt = newBoxes.begin(); itt != newBoxes.end(); itt++)
+                {
+                    cout << "pos of box (" << (*itt).first <<","<< (*itt).second<<")" << endl;
+                }
                 numberOfChild++;
             }
             frontier.push_back(rightNode);
             
             //DOWN CASE
-            pair<int,int> downPosition(observedNode.node.first+1,observedNode.node.second);
+            pair<int,int> downPosition(observedNode.node.first,observedNode.node.second+1);
             Node downNode = {downPosition,observedNode.path+'D'};
-            pair<int,int> doubleDownPosition(observedNode.node.first+2,observedNode.node.second);
-            if (boxes.find(downPosition) != boxes.end() && (*map)[doubleDownPosition.first][doubleDownPosition.second] !='#' && boxes.find(doubleDownPosition) == boxes.end()) //If the slot on the right of the player position contains a box and the move is possible a child state is created where the box has been pushed right
+            pair<int,int> doubleDownPosition(observedNode.node.first,observedNode.node.second+2);
+            if (boxes.find(downPosition) != boxes.end() && (*map)[doubleDownPosition.second][doubleDownPosition.first] !='#' && boxes.find(doubleDownPosition) == boxes.end()) //If the slot on the right of the player position contains a box and the move is possible a child state is created where the box has been pushed right
             {
                 pair<int,int> boxFound = downNode.node;
                 set<pair<int,int>> newBoxes = boxes;
                 newBoxes.erase(boxFound);
                 newBoxes.insert(doubleDownPosition);
-                State child(map,path+downNode.path,this,newBoxes,boxFound);
-                children.push_back(&child);
+                State* child = 0;
+                child = new State(map,path+downNode.path,this,newBoxes,boxFound);
+                children.push_back(child);
+                child->print();
+                cout << child->path << endl;
+                cout << "play pos (" << boxFound.first << "," << boxFound.second <<")" << endl;
+                set<pair<int,int>>::iterator itt;
+                for (itt = newBoxes.begin(); itt != newBoxes.end(); itt++)
+                {
+                    cout << "pos of box (" << (*itt).first <<","<< (*itt).second<<")" << endl;
+                }
                 numberOfChild++;
             }
             frontier.push_back(downNode);
             
             //LEFT CASE
-            pair<int,int> leftPosition(observedNode.node.first,observedNode.node.second-1);
+            pair<int,int> leftPosition(observedNode.node.first-1,observedNode.node.second);
             Node leftNode = {leftPosition,observedNode.path+'L'};
-            pair<int,int> doubleLeftPosition(observedNode.node.first,observedNode.node.second-2);
-            if (boxes.find(leftPosition) != boxes.end() && (*map)[doubleLeftPosition.first][doubleLeftPosition.second] !='#' && boxes.find(doubleLeftPosition) == boxes.end()) //If the slot on the right of the player position contains a box and the move is possible a child state is created where the box has been pushed right
+            pair<int,int> doubleLeftPosition(observedNode.node.first-2,observedNode.node.second);
+            if (boxes.find(leftPosition) != boxes.end() && (*map)[doubleLeftPosition.second][doubleLeftPosition.first] !='#' && boxes.find(doubleLeftPosition) == boxes.end()) //If the slot on the right of the player position contains a box and the move is possible a child state is created where the box has been pushed right
             {
+                cout << "dat " << endl;
                 pair<int,int> boxFound = leftNode.node;
                 set<pair<int,int>> newBoxes = boxes;
                 newBoxes.erase(boxFound);
                 newBoxes.insert(doubleLeftPosition);
-                State child(map,path+downNode.path,this,newBoxes,boxFound);
-                children.push_back(&child);
+                State* child = 0;
+                child = new State(map,path+leftNode.path,this,newBoxes,boxFound);
+                children.push_back(child);
+                child->print();
+                cout << child->path << endl;
+                cout << "play pos (" << boxFound.first << "," << boxFound.second <<")" << endl;
+                set<pair<int,int>>::iterator itt;
+                for (itt = newBoxes.begin(); itt != newBoxes.end(); itt++)
+                {
+                    cout << "pos of box (" << (*itt).first <<","<< (*itt).second<<")" << endl;
+                }
                 numberOfChild++;
             }
             frontier.push_back(leftNode);
             
         }
         
-        visitedStates[observedNode.node.first][observedNode.node.second] = 1;
+        visitedStates[observedNode.node.second][observedNode.node.first] = 1;
     }
     
-    //cout << "number of child states "<< numberOfChild << endl;
+    cout << "number of child states "<< numberOfChild << endl;
 	return children;
 }
 

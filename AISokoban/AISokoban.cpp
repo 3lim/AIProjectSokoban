@@ -45,7 +45,6 @@ int main(void)
 	std::set<std::pair<int,int>> boxes;
 	std::vector<std::pair<int,int>> goals;
 	std::pair<int,int> player;
-
 	for(unsigned int y = 0; y < board.size(); y++)
 	{
 		for(unsigned int x = 0; x < board[y].size(); x++)
@@ -75,7 +74,7 @@ int main(void)
 
 	State* initState = new State(&board,"",NULL,boxes,player);
 	Constants::Goals = goals;
-	
+    
 	State* endState = NULL;
 
 	//list of seen, but not not expanded states
