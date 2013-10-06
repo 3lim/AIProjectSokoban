@@ -43,7 +43,7 @@ int main(void)
 		board.push_back(line);
 		
 	std::set<std::pair<int,int>> boxes;
-	std::vector<std::pair<int,int>> goals;
+	std::set<std::pair<int,int>> goals;
 	std::pair<int,int> player;
 	for(unsigned int y = 0; y < board.size(); y++)
 	{
@@ -55,17 +55,17 @@ int main(void)
 				case '@': player = pos;
 						  board[y][x] = ' ';
 						  break;
-				case '.': goals.push_back(pos);
+				case '.': goals.insert(pos);
 						  break;
 				case '+': player = pos;
-						  goals.push_back(pos);
+						  goals.insert(pos);
 						  board[y][x] = '.';
 						  break;
 				case '$': boxes.insert(pos);
 						  board[y][x] = ' ';
 						  break;
 				case '*': boxes.insert(pos);
-						  goals.push_back(pos);
+						  goals.insert(pos);
 						  board[y][x] = '.';
 						  break;
 			}

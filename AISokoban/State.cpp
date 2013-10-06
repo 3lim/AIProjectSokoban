@@ -196,10 +196,11 @@ std::vector<State*> State::getChildStates()
 
 bool State::isLocked()
 {
-	//TODO: take into accompt case were win a box is ona lock state witch is a goal.
-
-	/*for(auto it=boxes.begin();it!=boxes.end();it++)
+	for(auto it=boxes.begin();it!=boxes.end();it++)
 	{
+		// Box on goal
+		if(Constants::Goals.find(*it)!=Constants::Goals.end()) continue;
+
 		// Box in corner
 		if((*map)[it->second][it->first-1] == '#')
 		{
@@ -209,7 +210,7 @@ bool State::isLocked()
 		{
 			if((*map)[it->second-1][it->first] == '#' || (*map)[it->second+1][it->first] == '#') return true;
 		}
-	}*/
+	}
 
 	return false;
 }
@@ -223,9 +224,9 @@ bool State::isWin()
 
 	// Alternative 
 
-	for(unsigned int i=0;i<Constants::Goals.size();i++) 
+	for(auto it=this->boxes.begin();it!=this->boxes.end();it++) 
 	{
-		if(this->boxes.find(Constants::Goals[i]) == this->boxes.end()) return false;
+		if(Constants::Goals.find(*it) == Constants::Goals.end()) return false;
 	}
 	
 	return true;
@@ -237,10 +238,10 @@ int State::getHeuristicValue()
 	set<pair<int,int>>::iterator it;
 	for(it=boxes.begin();it!=boxes.end();it++){
 		pair<int,int> box = (*it);
-		pair<int,int> goal  = Constants::Goals[0];
+		pair<int,int> goal  = *Constants::Goals.begin();
 		int dist= abs(box.first-goal.first)+abs(box.second-goal.second);
-		for(unsigned int i=1;i<Constants::Goals.size() && dist!=0;i++){
-			goal = Constants::Goals[i];
+		for(auto it=++Constants::Goals.begin();it!=Constants::Goals.end() && dist!=0;it++){
+			goal = *it;
 			dist = min(dist,abs(box.first-goal.first)+abs(box.second-goal.second));
 		}
 		ret+=dist;
