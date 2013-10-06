@@ -62,11 +62,11 @@ std::vector<State*> State::getChildStates()
     
     //map of bool: every visited position is marked true once visited
     vector<vector<bool>> visitedStates;
-	for (int line = 0; line < map->size(); line++)
+	for (unsigned int line = 0; line < map->size(); line++)
     {
         vector<bool> visitedStatesLine;
         
-        for (int column= 0; column < (*map)[line].size()-1; column++)
+        for (unsigned int column= 0; column < (*map)[line].size()-1; column++)
         {
             visitedStatesLine.push_back(0);
         }
@@ -216,3 +216,56 @@ int State::getPathLength()
 	// Should be computed just one time as this doesn't change during search
 	//return parent->getPathLength()+path.size();
 }
+
+bool compare (pair<int,int> first, pair<int,int> second)
+{
+	if(first.first!=second.first)
+	{
+		return first.second>second.second;
+	}else{
+		return first.first>second.first;
+	}
+}
+
+void State::print()
+{
+	list<pair<int,int>> boxes_sorted;
+	set<std::pair<int,int>>::iterator it;
+	for(it=boxes.begin();it!=boxes.end();it++){
+		boxes_sorted.push_back(*it);
+	}
+	boxes_sorted.sort(compare);
+	pair<int,int> box  = boxes_sorted.front();
+	boxes_sorted.pop_front();
+	bool moreBox=true;
+	bool playerb=true;
+	for(int i=0;i<map->size();i++){
+		for(int j=0;j<(*map)[i].size();j++){
+			char c = (*map)[i][j];
+			//checking with boxes
+			if(moreBox && box.first==j && box.second==i){
+				if(c==FREE_SPACE){
+					c=BOX;
+				}else if(c==GOAL){
+					c=BOX_GOAL;
+				}
+				if(boxes_sorted.empty()){
+					moreBox=false;
+				}else{
+					box  = boxes_sorted.front();
+					boxes_sorted.pop_front();
+				}
+			}else if(playerb && player.first==i &&player.second==j){
+				if(c==FREE_SPACE){
+					c=PLAYER;
+				}else if(c==GOAL){
+					c=PLAYER_GOAL;
+				}
+				playerb=false;
+			}
+			std::cout<<c;
+		}
+		std::cout<<endl;
+	}
+}
+

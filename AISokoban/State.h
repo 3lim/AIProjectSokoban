@@ -19,7 +19,7 @@ public:
 	std::string getPath();
 	State* getParent();
 	int getPathLength();
-
+	void print();
 	static std::vector<std::pair<int,int>> goals;
 private:
 	std::set<std::pair<int,int>> boxes;

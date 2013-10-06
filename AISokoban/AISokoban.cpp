@@ -93,7 +93,7 @@ int main(void)
 		//selecting the best state and removing it from the list.
 		State* state = currentStates.top();
 
-		//std::cout << "expanding node : " <<state->getHeuristicValue() << std::endl;
+		std::cout << "expanding node : " <<state->getHeuristicValue() << std::endl;
 		currentStates.pop();
 		visitedStates.emplace(state);
 
