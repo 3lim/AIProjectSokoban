@@ -9,9 +9,8 @@ State::State(std::vector<std::string>* map, std::string path, State* parent, std
 {
 	// Think of pathLength more of a total heuristic value, as we aren't interested in the shortest path, only in the one 
 	// that leads us to the goal the fastest, i.e. lowest total heuristic value (fewest box-moves?)
-
-	pathLength = this->getHeuristicValue() + (parent == NULL ? 0 : parent->getHeuristicValue());
-	
+	//pathLength = this->getHeuristicValue() + (parent == NULL ? 0 : parent->getHeuristicValue());
+	pathLength =  (parent == NULL ? 0 : parent->getPathLength()+1);
 	//pathLength = path.size() + (parent == NULL ? 0 : parent->getPathLength());
 }
 
@@ -54,7 +53,7 @@ std::vector<State*> State::getChildStates()
     
     
     // Start of the search
-    Node start = {player,path};
+    Node start = {player,""};
     
     vector<Node> frontier;
     
@@ -74,7 +73,7 @@ std::vector<State*> State::getChildStates()
         visitedStates.push_back(visitedStatesLine);
     }
     
-    cout << visitedStates.size() << endl;
+    //cout << visitedStates.size() << endl;
     
     while (frontier.size() != 0)
     {
@@ -96,16 +95,16 @@ std::vector<State*> State::getChildStates()
                 newBoxes.erase(boxFound);
                 newBoxes.insert(doubleUpPosition);
                 State* child = 0;
-                child = new State(map,path+upNode.path,this,newBoxes,boxFound);
+                child = new State(map,upNode.path,this,newBoxes,boxFound);
                 children.push_back(child);
-                child->print();
-                cout << child->path << endl;
+               // child->print();
+                 /*cout << child->path << endl;
                 cout << "play pos (" << boxFound.first << "," << boxFound.second <<")" << endl;
                 set<pair<int,int>>::iterator itt;
                 for (itt = newBoxes.begin(); itt != newBoxes.end(); itt++)
                 {
                     cout << "pos of box (" << (*itt).first <<","<< (*itt).second<<")" << endl;
-                }
+                }*/
                 numberOfChild++;
             }
             frontier.push_back(upNode);
@@ -121,16 +120,16 @@ std::vector<State*> State::getChildStates()
                 newBoxes.erase(boxFound);
                 newBoxes.insert(doubleRightPosition);
                 State* child = 0;
-                child = new State(map,path+rightNode.path,this,newBoxes,boxFound);
+                child = new State(map,rightNode.path,this,newBoxes,boxFound);
                 children.push_back(child);
-                child->print();
-                cout << child->path << endl;
-                cout << "play pos (" << boxFound.first << "," << boxFound.second <<")" << endl;
-                set<pair<int,int>>::iterator itt;
+               // child->print();
+               // cout << child->path << endl;
+               // cout << "play pos (" << boxFound.first << "," << boxFound.second <<")" << endl;
+                /*set<pair<int,int>>::iterator itt;
                 for (itt = newBoxes.begin(); itt != newBoxes.end(); itt++)
                 {
                     cout << "pos of box (" << (*itt).first <<","<< (*itt).second<<")" << endl;
-                }
+                }*/
                 numberOfChild++;
             }
             frontier.push_back(rightNode);
@@ -146,16 +145,16 @@ std::vector<State*> State::getChildStates()
                 newBoxes.erase(boxFound);
                 newBoxes.insert(doubleDownPosition);
                 State* child = 0;
-                child = new State(map,path+downNode.path,this,newBoxes,boxFound);
+                child = new State(map,downNode.path,this,newBoxes,boxFound);
                 children.push_back(child);
-                child->print();
-                cout << child->path << endl;
+               // child->print();
+               /* cout << child->path << endl;
                 cout << "play pos (" << boxFound.first << "," << boxFound.second <<")" << endl;
                 set<pair<int,int>>::iterator itt;
                 for (itt = newBoxes.begin(); itt != newBoxes.end(); itt++)
                 {
                     cout << "pos of box (" << (*itt).first <<","<< (*itt).second<<")" << endl;
-                }
+                }*/
                 numberOfChild++;
             }
             frontier.push_back(downNode);
@@ -166,22 +165,22 @@ std::vector<State*> State::getChildStates()
             pair<int,int> doubleLeftPosition(observedNode.node.first-2,observedNode.node.second);
             if (boxes.find(leftPosition) != boxes.end() && (*map)[doubleLeftPosition.second][doubleLeftPosition.first] !='#' && boxes.find(doubleLeftPosition) == boxes.end()) //If the slot on the right of the player position contains a box and the move is possible a child state is created where the box has been pushed right
             {
-                cout << "dat " << endl;
+               // cout << "dat " << endl;
                 pair<int,int> boxFound = leftNode.node;
                 set<pair<int,int>> newBoxes = boxes;
                 newBoxes.erase(boxFound);
                 newBoxes.insert(doubleLeftPosition);
                 State* child = 0;
-                child = new State(map,path+leftNode.path,this,newBoxes,boxFound);
+                child = new State(map,leftNode.path,this,newBoxes,boxFound);
                 children.push_back(child);
-                child->print();
-                cout << child->path << endl;
+              //  child->print();
+               /* cout << child->path << endl;
                 cout << "play pos (" << boxFound.first << "," << boxFound.second <<")" << endl;
                 set<pair<int,int>>::iterator itt;
                 for (itt = newBoxes.begin(); itt != newBoxes.end(); itt++)
                 {
                     cout << "pos of box (" << (*itt).first <<","<< (*itt).second<<")" << endl;
-                }
+                }*/
                 numberOfChild++;
             }
             frontier.push_back(leftNode);
@@ -191,14 +190,15 @@ std::vector<State*> State::getChildStates()
         visitedStates[observedNode.node.second][observedNode.node.first] = 1;
     }
     
-    cout << "number of child states "<< numberOfChild << endl;
+    //cout << "number of child states "<< numberOfChild << endl;
 	return children;
 }
 
 bool State::isLocked()
 {
-	//TODO: implement me
-	for(auto it=boxes.begin();it!=boxes.end();it++)
+	//TODO: take into accompt case were win a box is ona lock state witch is a goal.
+
+	/*for(auto it=boxes.begin();it!=boxes.end();it++)
 	{
 		// Box in corner
 		if((*map)[it->second][it->first-1] == '#')
@@ -209,7 +209,7 @@ bool State::isLocked()
 		{
 			if((*map)[it->second-1][it->first] == '#' || (*map)[it->second+1][it->first] == '#') return true;
 		}
-	}
+	}*/
 
 	return false;
 }
@@ -219,7 +219,7 @@ bool State::isWin()
 	// TODO: Needs to be efficient, as this is checked every expansion
 	// Shouldn't the heurisitc value be 0 for a winning state if we just consider the distance of each box to a goal?
 	
-	return this->getHeuristicValue() == 0;
+//	return this->getHeuristicValue() == 0;
 
 	// Alternative 
 
@@ -233,8 +233,19 @@ bool State::isWin()
 
 int State::getHeuristicValue()
 {
-	//TODO: implement me
-	return 0;
+	int ret=0;
+	set<pair<int,int>>::iterator it;
+	for(it=boxes.begin();it!=boxes.end();it++){
+		pair<int,int> box = (*it);
+		pair<int,int> goal  = Constants::Goals[0];
+		int dist= abs(box.first-goal.first)+abs(box.second-goal.second);
+		for(unsigned int i=1;i<Constants::Goals.size() && dist!=0;i++){
+			goal = Constants::Goals[i];
+			dist = min(dist,abs(box.first-goal.first)+abs(box.second-goal.second));
+		}
+		ret+=dist;
+	}
+	return ret;
 }
 
 int State::getHash()
@@ -251,6 +262,7 @@ int State::getHash()
 
 std::string State::getPath()
 {
+	//cout << "path " << path<<endl;
 	return parent == NULL ? path : parent->getPath().append(path);
 }
 
@@ -269,39 +281,27 @@ int State::getPathLength()
 	//return parent->getPathLength()+path.size();
 }
 
-bool compare (pair<int,int> first, pair<int,int> second)
-{
-	if(first.first!=second.first)
-	{
-		return first.second>second.second;
-	}else{
-		return first.first>second.first;
-	}
-}
-
 void State::print()
 {
-	
-	for(int i=0;i<map->size();i++)
-    {
-		for(int j=0;j<(*map)[i].size();j++)
-        {
-            pair<int,int> printBox(j,i);
-            if (boxes.find(printBox) !=boxes.end())
-            {
-                cout << "$";
-            }
-            else if(printBox.first == player.first && printBox.second == player.second)
-            {
-                cout << "@";
-            }
-            else
-            {
-                cout << (*map)[i][j];
-            }
-        }
-        cout << endl;
-			
+	for(unsigned int i=0;i<map->size();i++){
+		for(unsigned int j=0;j<(*map)[i].size();j++){
+			char c = (*map)[i][j];
+			pair<int,int> currentPos(j,i);
+			if(boxes.find(currentPos)!=boxes.end()){
+				if(c==FREE_SPACE){
+					c=BOX;
+				}else if(c==GOAL){
+					c=BOX_GOAL;
+				}
+			}else if( player.first==currentPos.first &&player.second==currentPos.second){
+				if(c==FREE_SPACE){
+					c=PLAYER;
+				}else if(c==GOAL){
+					c=PLAYER_GOAL;
+				}
+			}
+			std::cout<<c;
+		}
+		std::cout<<endl;
 	}
 }
-

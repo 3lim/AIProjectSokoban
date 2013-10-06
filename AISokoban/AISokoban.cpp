@@ -31,8 +31,8 @@ class comparison
 public:
   bool operator() (State* const &  lhs, State* const & rhs) const
   {
-	  std::cout << rhs->getHeuristicValue() <<lhs->getHeuristicValue() << std::endl;
-	  return lhs->getHeuristicValue()>rhs->getHeuristicValue();
+	 // std::cout << rhs->getHeuristicValue() <<lhs->getHeuristicValue() << std::endl;
+	  return lhs->getHeuristicValue()+lhs->getPathLength()>rhs->getHeuristicValue()+rhs->getPathLength();
   }
 };
 
@@ -92,7 +92,13 @@ int main(void)
 		//selecting the best state and removing it from the list.
 		State* state = currentStates.top();
 
-		std::cout << "expanding node : " <<state->getHeuristicValue() << std::endl;
+		/*
+		std::cout << "------------------------" << std::endl;
+		std::cout << "HeuristicValue : " <<state->getHeuristicValue() << std::endl;
+		//std::cout << "path : " <<state->getPath() << std::endl;
+		state->print();
+		std::cout << "------------------------" << std::endl;
+		*/
 		currentStates.pop();
 		visitedStates.emplace(state);
 
@@ -119,6 +125,7 @@ int main(void)
 			}
 			else
 			{
+				//std::cout<<"adding a state"<< std::endl;
 				//check if lock state
 				if(!(*it)->isLocked()) currentStates.push(*it);
 			}
