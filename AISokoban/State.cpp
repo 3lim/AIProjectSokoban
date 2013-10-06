@@ -281,43 +281,27 @@ bool compare (pair<int,int> first, pair<int,int> second)
 
 void State::print()
 {
-	list<pair<int,int>> boxes_sorted;
-	set<std::pair<int,int>>::iterator it;
-	for(it=boxes.begin();it!=boxes.end();it++){
-		boxes_sorted.push_back(*it);
-	}
-	boxes_sorted.sort(compare);
-	pair<int,int> box  = boxes_sorted.front();
-	boxes_sorted.pop_front();
-	bool moreBox=true;
-	bool playerb=true;
-	for(int i=0;i<map->size();i++){
-		for(int j=0;j<(*map)[i].size();j++){
-			char c = (*map)[i][j];
-			//checking with boxes
-			if(moreBox && box.first==j && box.second==i){
-				if(c==FREE_SPACE){
-					c=BOX;
-				}else if(c==GOAL){
-					c=BOX_GOAL;
-				}
-				if(boxes_sorted.empty()){
-					moreBox=false;
-				}else{
-					box  = boxes_sorted.front();
-					boxes_sorted.pop_front();
-				}
-			}else if(playerb && player.first==i &&player.second==j){
-				if(c==FREE_SPACE){
-					c=PLAYER;
-				}else if(c==GOAL){
-					c=PLAYER_GOAL;
-				}
-				playerb=false;
-			}
-			std::cout<<c;
-		}
-		std::cout<<endl;
+	
+	for(int i=0;i<map->size();i++)
+    {
+		for(int j=0;j<(*map)[i].size();j++)
+        {
+            pair<int,int> printBox(j,i);
+            if (boxes.find(printBox) !=boxes.end())
+            {
+                cout << "$";
+            }
+            else if(printBox.first == player.first && printBox.second == player.second)
+            {
+                cout << "@";
+            }
+            else
+            {
+                cout << (*map)[i][j];
+            }
+        }
+        cout << endl;
+			
 	}
 }
 
