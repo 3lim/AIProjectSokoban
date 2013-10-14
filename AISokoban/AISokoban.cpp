@@ -181,7 +181,7 @@ std::vector<std::vector<std::vector<int>>> findDistancesToGoal(std::vector<std::
         
         Node start = {*startList.begin(),""};
         
-        std::cout << "(" << start.node.first << "," << start.node.second << ")" << std::endl;
+       // std::cout << "(" << start.node.first << "," << start.node.second << ")" << std::endl;
         
         frontier.push(start);
         
