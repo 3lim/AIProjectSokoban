@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <queue>
 using namespace std;
 
 
@@ -55,9 +56,9 @@ std::vector<State*> State::getChildStates()
 	// Start of the search
 	Node start = {player,""};
 	
-	vector<Node> frontier;
+	queue<Node> frontier;
 	
-	frontier.push_back(start);
+	frontier.push(start);
 	
 	//map of bool: every visited position is marked true once visited
 	vector<vector<bool>> visitedStates;
@@ -80,7 +81,7 @@ std::vector<State*> State::getChildStates()
 		
 		//BFS SEARCH: first element of the list is taken
 		Node observedNode = frontier.front();
-		frontier.erase(frontier.begin());
+		frontier.pop();
 		
 		if ((*map)[observedNode.node.second][observedNode.node.first]!='#' && boxes.find(observedNode.node) == boxes.end() && visitedStates[observedNode.node.second][observedNode.node.first]!=1)
 		{
@@ -107,7 +108,7 @@ std::vector<State*> State::getChildStates()
 				}*/
 				numberOfChild++;
 			}
-			frontier.push_back(upNode);
+			frontier.push(upNode);
 			
 			//RIGHT CASE
 			pair<int,int> rightPosition(observedNode.node.first+1,observedNode.node.second);
@@ -132,7 +133,7 @@ std::vector<State*> State::getChildStates()
 				}*/
 				numberOfChild++;
 			}
-			frontier.push_back(rightNode);
+			frontier.push(rightNode);
 			
 			//DOWN CASE
 			pair<int,int> downPosition(observedNode.node.first,observedNode.node.second+1);
@@ -157,7 +158,7 @@ std::vector<State*> State::getChildStates()
 				}*/
 				numberOfChild++;
 			}
-			frontier.push_back(downNode);
+			frontier.push(downNode);
 			
 			//LEFT CASE
 			pair<int,int> leftPosition(observedNode.node.first-1,observedNode.node.second);
@@ -183,7 +184,7 @@ std::vector<State*> State::getChildStates()
 				}*/
 				numberOfChild++;
 			}
-			frontier.push_back(leftNode);
+			frontier.push(leftNode);
 			
 		}
 		
