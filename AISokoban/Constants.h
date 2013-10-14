@@ -1,5 +1,5 @@
 #pragma once
-#include <vector>
+#include <set>
 
 #define FREE_SPACE ' '
 #define WALL '#'
@@ -12,5 +12,5 @@
 class Constants
 {
 public:
-	static std::vector<std::pair<int,int>> Goals;
+	static std::set<std::pair<int,int>> Goals;
 };
