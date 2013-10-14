@@ -92,17 +92,12 @@ int main(void)
 		//selecting the best state and removing it from the list.
 		State* state = currentStates.top();
 
-		/*
-		std::cout << "------------------------" << std::endl;
-		std::cout << "HeuristicValue : " <<state->getHeuristicValue() << std::endl;
-		//std::cout << "path : " <<state->getPath() << std::endl;
-		state->print();
-		std::cout << "------------------------" << std::endl;
-		*/
 		currentStates.pop();
+		
 		visitedStates.insert(state);
 
 		std::vector<State*> childs  = state->getChildStates();
+
 		std::vector<State*>::iterator it;
 		//looping through all childs of the selected state.
 		for(it=childs.begin();it!=childs.end();it++)
