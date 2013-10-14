@@ -32,6 +32,6 @@ private:
 
 struct Node
 {
-    std::pair<int,int> node;
-    std::string path; // path travelled to reach this node
+	std::pair<int,int> node;
+	std::string path; // path travelled to reach this node
 };

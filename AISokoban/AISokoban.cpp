@@ -7,6 +7,13 @@
 #include <unordered_set>
 #include <set>
 #include <string>
+#include <map>
+
+typedef struct {
+	std::pair<int,int> pos;
+	int origin;
+	int dist;
+} square_t;
 
 namespace std {
   template <>
@@ -35,6 +42,74 @@ public:
 	  return lhs->getHeuristicValue()+lhs->getPathLength()>rhs->getHeuristicValue()+rhs->getPathLength();
   }
 };
+
+bool moveable(char c)
+{
+	return c != '#';
+}
+
+// Compute data for all Positions from where a box can be pushed to any goal
+// Data consists of a map from position to goal id to shortest distance to that goal
+
+void computePushablePositionData(std::set<std::pair<int,int>> goals, std::vector<std::string>& map, std::map<std::pair<int,int>,std::map<int,int>>& positions)
+{
+	std::queue<square_t> q;
+	std::set<std::pair<int,std::pair<int,int>>> visited;
+	int i=0;
+	for(auto it = goals.begin();it != goals.end();it++,i++) 
+	{
+		square_t n = {*it,i,0};
+		q.push(n);
+	}
+
+	while(!q.empty())
+	{
+		square_t node = q.front();
+		std::pair<int,int> pos = node.pos;
+		q.pop();
+		
+		if(visited.find(std::pair<int,std::pair<int,int>>(node.origin,pos)) != visited.end()) 
+		{
+			int* dist = &positions[node.pos][node.origin];
+
+			if(*dist<=node.dist) continue;
+			else *dist = node.dist;
+		}
+		else
+		{
+			visited.insert(std::pair<int,std::pair<int,int>>(node.origin,pos));
+		}
+
+		bool pushable = false;
+		
+		if(moveable(map[pos.second-1][pos.first]) && moveable(map[pos.second-2][pos.first])) 
+		{
+			pushable = true;
+			square_t n = {std::pair<int,int>(pos.first,pos.second-1),node.origin,node.dist+1};
+			q.push(n);
+		}
+		if(moveable(map[pos.second+1][pos.first]) && moveable(map[pos.second+2][pos.first])) 
+		{
+			pushable = true;
+			square_t n = {std::pair<int,int>(pos.first,pos.second+1),node.origin,node.dist+1};
+			q.push(n);
+		}
+		if(moveable(map[pos.second][pos.first-1]) && moveable(map[pos.second][pos.first-2])) 
+		{
+			pushable = true;
+			square_t n = {std::pair<int,int>(pos.first-1,pos.second),node.origin,node.dist+1};
+			q.push(n);
+		}
+		if(moveable(map[pos.second][pos.first+1]) && moveable(map[pos.second][pos.first+2])) 
+		{
+			pushable = true;
+			square_t n = {std::pair<int,int>(pos.first+1,pos.second),node.origin,node.dist+1};
+			q.push(n);
+		}
+
+		if(pushable) positions[pos][node.origin] = node.dist;
+	}
+}
 
 int main(void)
 {
@@ -72,9 +147,11 @@ int main(void)
 		}
 	}
 
+	computePushablePositionData(goals,board,Constants::pushablePositions);
+
 	State* initState = new State(&board,"",NULL,boxes,player);
 	Constants::Goals = goals;
-    
+	
 	State* endState = NULL;
 
 	//list of seen, but not not expanded states
