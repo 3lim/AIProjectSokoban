@@ -28,6 +28,8 @@ private:
 	State* parent;
 	std::vector<std::string>* map;
 	int pathLength;
+	int heuristicValue;
+	int hash;
 };
 
 struct Node

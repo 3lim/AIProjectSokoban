@@ -12,7 +12,62 @@ State::State(std::vector<std::string>* map, std::string path, State* parent, std
 	// that leads us to the goal the fastest, i.e. lowest total heuristic value (fewest box-moves?)
 	//pathLength = this->getHeuristicValue() + (parent == NULL ? 0 : parent->getHeuristicValue());
 	pathLength =  (parent == NULL ? 0 : parent->getPathLength()+1);
+	heuristicValue = -1;
 	//pathLength = path.size() + (parent == NULL ? 0 : parent->getPathLength());
+
+	
+	//Computing hash
+
+	// initialise the upper left point with player coordinates.
+	pair<int,int> min =player;
+
+	//retrieving the upper left point of the player's area.
+
+	vector<vector<bool>> visitedSpot;
+	for (unsigned int line = 0; line < map->size(); line++)
+	{
+		vector<bool> visitedSpotLine;
+		
+		for (unsigned int column= 0; column < (*map)[line].size()-1; column++)
+		{
+			visitedSpotLine.push_back(0);
+		}
+		
+		visitedSpot.push_back(visitedSpotLine);
+	}
+	visitedSpot[player.second][player.first] = 1;
+	queue<pair<int,int>> spots;
+	spots.push(player);
+	int a=0;
+	while (!spots.empty())
+	{
+		//cout << "visiting " <<a++<<endl;
+		pair<int,int> observedSpot = spots.front();
+		spots.pop();
+		list<pair<int,int>> nexts;
+		nexts.push_back(make_pair(observedSpot.first,observedSpot.second+1));
+		nexts.push_back(make_pair(observedSpot.first,observedSpot.second-1));
+		nexts.push_back(make_pair(observedSpot.first+1,observedSpot.second));
+		nexts.push_back(make_pair(observedSpot.first-1,observedSpot.second));
+		for(list<pair<int,int>>::iterator it=nexts.begin();it!=nexts.end();it++){
+			if(!visitedSpot[it->second][it->first] && (*map)[it->second][it->first]!=WALL){
+				visitedSpot[it->second][it->first] = 1;
+				spots.push((*it));
+				if(min.first+min.second>it->first+it->second){
+					min = (*it);
+				}
+			}
+		}
+	}
+	//*/
+	int count = boxes.size();
+	int hash = min.first+(min.second*29);
+	//int hash = player.first+(player.second*29);
+	int i=0;
+	for(auto it=boxes.begin();i<count;it++,i++)
+	{
+		hash = 65599 * hash + (*it).first+((*it).second*29);
+	}
 }
 
 
@@ -31,15 +86,18 @@ bool State::operator == (const State &b) const
 	/*if(b.boxes.size()!=boxes.size()){
 		return false;
 	}*/
+	if(hash != b.hash){
+		return false;
+	}
 
 	for(auto it=boxes.begin();it!=boxes.end();it++)
 	{
 		if(b.boxes.find(*it) == b.boxes.end()) return false;
 	}
 
-	if(player.first!=b.player.first || player.second!=b.player.second){
+	/*if(player.first!=b.player.first || player.second!=b.player.second){
 		return false;
-	}
+	}*/
 
 	return true;
 }
@@ -55,6 +113,7 @@ std::vector<State*> State::getChildStates()
 	
 	// Start of the search
 	Node start = {player,""};
+
 	
 	queue<Node> frontier;
 	
@@ -83,6 +142,9 @@ std::vector<State*> State::getChildStates()
 		Node observedNode = frontier.front();
 		frontier.pop();
 		
+		//keeping track of the upper left point visited to compute hash later on.
+		
+
 		if ((*map)[observedNode.node.second][observedNode.node.first]!='#' && boxes.find(observedNode.node) == boxes.end() && visitedStates[observedNode.node.second][observedNode.node.first]!=1)
 		{
 			//UP CASE
@@ -192,6 +254,7 @@ std::vector<State*> State::getChildStates()
 	}
 	
 	//cout << "number of child states "<< numberOfChild << endl;
+
 	return children;
 }
 
@@ -311,6 +374,8 @@ bool State::isWin()
 
 int State::getHeuristicValue()
 {
+	if(heuristicValue != -1) return heuristicValue;
+
 	int ret=0;
 	set<pair<int,int>>::iterator it;
 	for(it=boxes.begin();it!=boxes.end();it++){
@@ -323,18 +388,13 @@ int State::getHeuristicValue()
 		}
 		ret+=dist;
 	}
+
+	heuristicValue = ret;
 	return ret;
 }
 
 int State::getHash()
 {
-	int count = boxes.size()<15 ? boxes.size() : 15; // do not take into account more than 15 box so make hash computation faster.
-	int hash = player.first+(player.second*3);
-	int i=0;
-	for(auto it=boxes.begin();i<count;it++,i++)
-	{
-		hash = 65599 * hash + (*it).first+((*it).second*3);
-	}
 	return hash;
 }
 
