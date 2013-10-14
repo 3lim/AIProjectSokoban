@@ -11,6 +11,7 @@ State::State(std::vector<std::string>* map, std::string path, State* parent, std
 	// that leads us to the goal the fastest, i.e. lowest total heuristic value (fewest box-moves?)
 	//pathLength = this->getHeuristicValue() + (parent == NULL ? 0 : parent->getHeuristicValue());
 	pathLength =  (parent == NULL ? 0 : parent->getPathLength()+1);
+	heuristicValue = -1;
 	//pathLength = path.size() + (parent == NULL ? 0 : parent->getPathLength());
 }
 
@@ -233,6 +234,8 @@ bool State::isWin()
 
 int State::getHeuristicValue()
 {
+	if(heuristicValue != -1) return heuristicValue;
+
 	int ret=0;
 	set<pair<int,int>>::iterator it;
 	for(it=boxes.begin();it!=boxes.end();it++){
@@ -245,11 +248,15 @@ int State::getHeuristicValue()
 		}
 		ret+=dist;
 	}
+
+	heuristicValue = ret;
 	return ret;
 }
 
 int State::getHash()
 {
+	return hash;
+
 	int count = boxes.size()<15 ? boxes.size() : 15; // do not take into account more than 15 box so make hash computation faster.
 	int hash = player.first+(player.second*3);
 	int i=0;

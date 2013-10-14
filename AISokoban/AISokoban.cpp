@@ -86,7 +86,7 @@ int main(void)
 
 	//currentStates.push_back(initState);
 	currentStates.push(initState);
-	visitedStates.emplace(initState);
+	visitedStates.insert(initState);
 	while(!currentStates.empty() && endState==NULL)
 	{
 		//selecting the best state and removing it from the list.
@@ -100,7 +100,7 @@ int main(void)
 		std::cout << "------------------------" << std::endl;
 		*/
 		currentStates.pop();
-		visitedStates.emplace(state);
+		visitedStates.insert(state);
 
 		std::vector<State*> childs  = state->getChildStates();
 		std::vector<State*>::iterator it;
