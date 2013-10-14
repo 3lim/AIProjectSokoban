@@ -81,7 +81,6 @@
   <ItemGroup>
     <ClCompile Include="AISokoban.cpp" />
     <ClCompile Include="Constants.cpp" />
-    <ClCompile Include="DeadlockPatternGenerator.cpp" />
     <ClCompile Include="State.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -153,16 +153,7 @@ int main(void)
 			}
 		}
 	}
-    
-    //each element of the vector distancesToGoal is a map of int. Each int express the distance to a specific goal. There is a map of distances for each goal
-    std::vector<std::vector<std::vector<int>>> distancesToGoal = findDistancesToGoal(board, goals);
-    
-    //print of the maps containing the distances to the goals
-    /*for (int i = 0; i < distancesToGoal.size(); i++)
-    {
-        printDistancesMap(distancesToGoal[i]);
-    }*/
-    
+	
 	computePushablePositionData(goals,board,Constants::pushablePositions);
 
 	State* initState = new State(&board,"",NULL,boxes,player);
@@ -234,107 +225,4 @@ int main(void)
 	}
 	
 	return 0;
-}
-
-std::vector<std::vector<std::vector<int>>> findDistancesToGoal(std::vector<std::string> const board, std::set<std::pair<int, int>> const goals)
-{
-    //each element of the vector distancesToGoal is a map of int. Each int express the distance to the goal. There is a map of distances in distancesToGoal for each goal
-    std::vector<std::vector<std::vector<int>>> distancesToGoal;
-    
-    //set containing the goals from where to start the BFS/flood search
-    std::set<std::pair<int, int>> startList= goals;
-    
-    //the frontier containing the next slot to explore
-    std::queue<Node> frontier;
-    
-    while (startList.size() != 0)
-    {
-        //BFS Search
-        
-        //map of bool: every visited position is marked true once visited
-        std::vector<std::vector<bool>> visitedStates;
-        
-        //map of int: every visited position is marked with its distances to goal value
-        std::vector<std::vector<int>> mapDistances;
-        
-        Node start = {*startList.begin(),""};
-        
-       // std::cout << "(" << start.node.first << "," << start.node.second << ")" << std::endl;
-        
-        frontier.push(start);
-        
-        //initialization of the visitedStates map and distances map
-        for (unsigned int line = 0; line < board.size(); line++)
-        {
-            std::vector<bool> visitedStatesLine;
-            std::vector<int> mapDistancesLine;
-            
-            for (unsigned int column= 0; column < board[line].size()-1; column++)
-            {
-                visitedStatesLine.push_back(0);
-                mapDistancesLine.push_back(0); //ATTENTION WALL HAVE A VALUE OF 0!
-            }
-            
-            visitedStates.push_back(visitedStatesLine);
-            mapDistances.push_back(mapDistancesLine);
-        }
-        
-        while (frontier.size() != 0)
-        {
-            Node observedNode = frontier.front();
-            frontier.pop();
-            
-            if (board[observedNode.node.second][observedNode.node.first]!='#' && visitedStates[observedNode.node.second][observedNode.node.first]!=1)
-            {
-                //the length of the path travelled from the goal to the map position is written in mapDistances
-                mapDistances[observedNode.node.second][observedNode.node.first] = observedNode.path.length();
-                
-                //UP CASE
-                std::pair<int,int> upNodePosition(observedNode.node.first,observedNode.node.second-1);
-                Node upNode = {upNodePosition,observedNode.path+'U'};
-                frontier.push(upNode);
-                
-                //RIGHT CASE
-                std::pair<int,int> rightPosition(observedNode.node.first+1,observedNode.node.second);
-                Node rightNode = {rightPosition,observedNode.path+'R'};
-                frontier.push(rightNode);
-                
-                //DOWN CASE
-                std::pair<int,int> downPosition(observedNode.node.first,observedNode.node.second+1);
-                Node downNode = {downPosition,observedNode.path+'D'};
-                frontier.push(downNode);
-                
-                //LEFT CASE
-                std::pair<int,int> leftPosition(observedNode.node.first-1,observedNode.node.second);
-                Node leftNode = {leftPosition,observedNode.path+'L'};
-                frontier.push(leftNode);
-            }
-            
-            visitedStates[observedNode.node.second][observedNode.node.first] = 1;
-        }
-        
-        startList.erase(startList.begin());
-        
-        //the map is pushed to the vector distancesToGoal
-        distancesToGoal.push_back(mapDistances);
-    }
-    
-    return distancesToGoal;
-};
-
-//debugging print function for map of integer
-void printDistancesMap(std::vector<std::vector<int>> map)
-{
-    for (int i = 0; i < map.size(); i++)
-    {
-        for (int j = 0; j < map[i].size(); j++)
-        {
-            std::cout << " " << map[i][j] << " ";
-        }
-        
-        std::cout << std::endl;
-    }
-    
-    std::cout << std::endl;
-    std::cout << std::endl;
 }
