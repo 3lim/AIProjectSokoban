@@ -260,6 +260,23 @@ std::vector<State*> State::getChildStates()
 
 bool State::isLocked()
 {
+	// Pick moved box
+	std::pair<int,int> movedBoxPos;
+	switch(path.back())
+	{
+	case 'U': movedBoxPos = std::pair<int,int>(player.first,player.second-1);
+		break;
+	case 'D': movedBoxPos = std::pair<int,int>(player.first,player.second+1);
+		break;
+	case 'L': movedBoxPos = std::pair<int,int>(player.first-1,player.second);
+		break;
+	case 'R': movedBoxPos = std::pair<int,int>(player.first+1,player.second);
+		break;
+	}
+
+	// State is locked if pushed box is in upushable position (can't reach any goal)
+	if(Constants::pushablePositions.find(movedBoxPos) == Constants::pushablePositions.end()) return true;
+
 	for(auto it=boxes.begin();it!=boxes.end();it++)
 	{
 		// Box on goal

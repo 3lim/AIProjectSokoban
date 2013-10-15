@@ -1,5 +1,6 @@
 #pragma once
 #include <set>
+#include <map>
 
 #define FREE_SPACE ' '
 #define WALL '#'
@@ -13,4 +14,5 @@ class Constants
 {
 public:
 	static std::set<std::pair<int,int>> Goals;
+	static std::map<std::pair<int,int>,std::map<int,int>> pushablePositions;
 };
