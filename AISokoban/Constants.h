@@ -9,10 +9,13 @@
 #define PLAYER_GOAL '+'
 #define BOX '$'
 #define BOX_GOAL '*'
+#define DT_W 3
+#define DT_H 3
 
 class Constants
 {
 public:
 	static std::set<std::pair<int,int>> Goals;
 	static std::map<std::pair<int,int>,std::map<int,int>> pushablePositions;
+	static std::set<std::string> deadlockTable;
 };

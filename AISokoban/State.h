@@ -15,7 +15,7 @@ public:
 	bool isLocked();
 	bool isWin();
 	int getHeuristicValue();
-	int getHash();
+	int getHash() const;
 	std::string getPath();
 	State* getParent();
 	int getPathLength();
@@ -30,6 +30,7 @@ private:
 	int pathLength;
 	int heuristicValue;
 	int hash;
+	std::pair<int,int> upperLeftReachable;
 };
 
 struct Node

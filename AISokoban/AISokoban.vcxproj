@@ -81,10 +81,12 @@
   <ItemGroup>
     <ClCompile Include="AISokoban.cpp" />
     <ClCompile Include="Constants.cpp" />
+    <ClCompile Include="DeadlockTable.cpp" />
     <ClCompile Include="State.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Constants.h" />
+    <ClInclude Include="DeadlockTable.h" />
     <ClInclude Include="State.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

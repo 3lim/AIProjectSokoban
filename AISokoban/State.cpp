@@ -3,17 +3,15 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include "Constants.h"
 using namespace std;
 
 
 State::State(std::vector<std::string>* map, std::string path, State* parent, std::set<std::pair<int,int>> boxes, std::pair<int,int> player) : map(map), path(path), parent(parent), boxes(boxes), player(player)
 {
-	// Think of pathLength more of a total heuristic value, as we aren't interested in the shortest path, only in the one 
-	// that leads us to the goal the fastest, i.e. lowest total heuristic value (fewest box-moves?)
-	//pathLength = this->getHeuristicValue() + (parent == NULL ? 0 : parent->getHeuristicValue());
+
 	pathLength =  (parent == NULL ? 0 : parent->getPathLength()+1);
 	heuristicValue = -1;
-	//pathLength = path.size() + (parent == NULL ? 0 : parent->getPathLength());
 
 	
 	//Computing hash
@@ -68,6 +66,7 @@ State::State(std::vector<std::string>* map, std::string path, State* parent, std
 	{
 		hash = 65599 * hash + (*it).first+((*it).second*29);
 	}
+	upperLeftReachable = min;
 }
 
 
@@ -82,24 +81,15 @@ State::~State(void)
 
 bool State::operator == (const State &b) const
 {
-	//useless ?
-	/*if(b.boxes.size()!=boxes.size()){
-		return false;
-	}*/
-	if(hash != b.hash){
-		return false;
-	}
-
-	for(auto it=boxes.begin();it!=boxes.end();it++)
-	{
-		if(b.boxes.find(*it) == b.boxes.end()) return false;
-	}
-
-	/*if(player.first!=b.player.first || player.second!=b.player.second){
+	/*if(hash != b.hash){
 		return false;
 	}*/
 
-	return true;
+	if(upperLeftReachable.first!=b.upperLeftReachable.first || upperLeftReachable.second!=b.upperLeftReachable.second){
+		return false;
+	}
+
+	return b.boxes == boxes;
 }
 
 std::vector<State*> State::getChildStates()
@@ -262,20 +252,63 @@ bool State::isLocked()
 {
 	// Pick moved box
 	std::pair<int,int> movedBoxPos;
+	int xX,yY,xY,yX;
 	switch(path.back())
 	{
 	case 'U': movedBoxPos = std::pair<int,int>(player.first,player.second-1);
+		xX = -1;
+		yY = -1;
+		xY = 0;
+		yX = 0;
 		break;
 	case 'D': movedBoxPos = std::pair<int,int>(player.first,player.second+1);
+		xX = 1;
+		yY = 1;
+		xY = 0;
+		yX = 0;
 		break;
 	case 'L': movedBoxPos = std::pair<int,int>(player.first-1,player.second);
+		xX = 0;
+		yY = 0;
+		xY = 1;
+		yX = -1;
 		break;
 	case 'R': movedBoxPos = std::pair<int,int>(player.first+1,player.second);
+		xX = 0;
+		yY = 0;
+		xY = -1;
+		yX = 1;
 		break;
 	}
+	
+	
+	if(Constants::Goals.find(movedBoxPos)!=Constants::Goals.end()) return false;
 
-	// State is locked if pushed box is in upushable position (can't reach any goal)
+	// State is locked if pushed box is in unpushable position (can't reach any goal)
 	if(Constants::pushablePositions.find(movedBoxPos) == Constants::pushablePositions.end()) return true;
+	
+	std::string dlCheck(DT_H * DT_W,' ');
+	
+	int xDiff = (DT_W % 2 == 0 ? DT_W : DT_W-1) / 2;
+	int yDiff = DT_H;
+	int j = 0;
+	for(int y = 0; y < yDiff; y++)
+	{
+		for(int x = - xDiff; x <= xDiff; x++)
+		{
+			int newY = player.second + y * yY + x * xY;
+			int newX = player.first + y * yX + x * xX;
+			dlCheck[j] = (newY < 0 || newY >= (*map).size() || newX < 0 || newX >= (*map)[newY].length()) ? ' ' : (*map)[newY][newX];
+			if(dlCheck[j] == BOX_GOAL) dlCheck[j] = '$';
+			if(dlCheck[j] == PLAYER_GOAL) dlCheck[j] = '@';
+			if(dlCheck[j] == GOAL) dlCheck[j] = ' ';
+			j++;
+		}
+	}
+
+	if(Constants::deadlockTable.find(dlCheck) != Constants::deadlockTable.end()) return true;
+
+	return false;
 
 	for(auto it=boxes.begin();it!=boxes.end();it++)
 	{
@@ -292,17 +325,17 @@ bool State::isLocked()
 		bool boxUp = boxes.find(std::pair<int,int>(it->first,it->second-1))!=boxes.end();
 		bool boxDown = boxes.find(std::pair<int,int>(it->first,it->second+1))!=boxes.end();
 
-		// Box in corner
-		/* #
-		   $# */
-		if(blockedLeft)
-		{
-			if(blockedUp || blockedDown) return true;
-		}
-		if(blockedRight)
-		{
-			if(blockedUp || blockedDown) return true;
-		}
+		//// Box in corner
+		///* #
+		//   $# */
+		//if(blockedLeft)
+		//{
+		//	if(blockedUp || blockedDown) return true;
+		//}
+		//if(blockedRight)
+		//{
+		//	if(blockedUp || blockedDown) return true;
+		//}
 
 		if(boxRight)
 		{
@@ -393,7 +426,7 @@ int State::getHeuristicValue()
 	return ret;
 }
 
-int State::getHash()
+int State::getHash() const
 {
 	return hash;
 }
@@ -408,15 +441,11 @@ State* State::getParent()
 {
 	//needed ?
 	return parent;
-
 }
 
 int State::getPathLength()
 {
 	return pathLength;
-
-	// Should be computed just one time as this doesn't change during search
-	//return parent->getPathLength()+path.size();
 }
 
 void State::print()

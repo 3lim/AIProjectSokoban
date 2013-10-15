@@ -8,6 +8,8 @@
 #include <set>
 #include <string>
 #include <map>
+#include <sstream>
+#include "DeadlockTable.h"
 
 typedef struct {
 	std::pair<int,int> pos;
@@ -38,17 +40,9 @@ class comparison
 public:
   bool operator() (State* const &  lhs, State* const & rhs) const
   {
-	 // std::cout << rhs->getHeuristicValue() <<lhs->getHeuristicValue() << std::endl;
-	  return lhs->getHeuristicValue()+lhs->getPathLength()>rhs->getHeuristicValue()+rhs->getPathLength();
+	  return lhs->getHeuristicValue()>rhs->getHeuristicValue();
   }
 };
-
-//function that creates a vector of maps containing integers which have the value of the distances to the goals. one map per goal.
-std::vector<std::vector<std::vector<int>>> findDistancesToGoal(std::vector<std::string> const board, std::set<std::pair<int, int>> const goals);
-
-//function that prints a map of integer. used for deubbging.
-void printDistancesMap(std::vector<std::vector<int>> map);
-
 
 bool moveable(char c)
 {
@@ -118,14 +112,19 @@ void computePushablePositionData(std::set<std::pair<int,int>> goals, std::vector
 	}
 }
 
+
+
 int main(void)
 {
 	std::vector<std::string> board;
 	for (std::string line; std::getline(std::cin, line);)
 		board.push_back(line);
-		
+
+	DeadlockTable::computeDeadlocks(DT_W,DT_H,Constants::deadlockTable);
+
 	std::set<std::pair<int,int>> boxes;
 	std::set<std::pair<int,int>> goals;
+	
 	std::pair<int,int> player;
 	for(unsigned int y = 0; y < board.size(); y++)
 	{
@@ -155,6 +154,7 @@ int main(void)
 	}
 	
 	computePushablePositionData(goals,board,Constants::pushablePositions);
+	std::cout << "Computed static position data" << std::endl;
 
 	State* initState = new State(&board,"",NULL,boxes,player);
 	Constants::Goals = goals;
@@ -171,6 +171,8 @@ int main(void)
 	//currentStates.push_back(initState);
 	currentStates.push(initState);
 	visitedStates.insert(initState);
+
+	int statesExpanded = 0;
 	while(!currentStates.empty() && endState==NULL)
 	{
 		//selecting the best state and removing it from the list.
@@ -178,6 +180,9 @@ int main(void)
 
 		currentStates.pop();
 		
+		statesExpanded++;
+		std::cout << statesExpanded << std::endl;
+
 		visitedStates.insert(state);
 
 		std::vector<State*> childs  = state->getChildStates();
@@ -195,7 +200,7 @@ int main(void)
 			}
 
 			//check if state already visited;
-			std::unordered_set<State*>::const_iterator got = visitedStates.find (*it);
+			auto got = visitedStates.find (*it);
 			if(got!=visitedStates.end())// state already seen
 			{
 				//std::cout<<"already visited (" << (*got)->getHeuristicValue() << ")"<< std::endl;
