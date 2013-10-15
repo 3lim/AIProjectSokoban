@@ -53,7 +53,7 @@ State::State(std::vector<std::string>* map, std::string path, State* parent, std
 			if(!visitedSpot[it->second][it->first] && (*map)[it->second][it->first]!=WALL){
 				visitedSpot[it->second][it->first] = 1;
 				spots.push((*it));
-				if(min.first+min.second>it->first+it->second){
+				if(min.first>it->first || (min.first==it->first && min.second>it->second)){
 					min = (*it);
 				}
 			}

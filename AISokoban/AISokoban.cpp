@@ -130,7 +130,7 @@ int main(void)
 			if(got!=visitedStates.end())// state already seen
 			{
 				//std::cout<<"already visited (" << (*got)->getHeuristicValue() << ")"<< std::endl;
-
+				delete (*it);
 				// TODO: delete useless state.
 			}
 			else
