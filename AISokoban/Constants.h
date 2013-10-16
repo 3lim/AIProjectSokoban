@@ -14,7 +14,7 @@
 #define BOX '$'
 #define BOX_GOAL '*'
 #define DT_W 3
-#define DT_H 3
+#define DT_H 4
 
 class Constants
 {

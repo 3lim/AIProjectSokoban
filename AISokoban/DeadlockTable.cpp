@@ -26,18 +26,23 @@ std::vector<int> DeadlockTable::generateCircularPositions()
 	int genPositions = 0;
 	int lX,lY,pP;
 	pP = lX = DT_W % 2 == 0 ? DT_W / 2 : (DT_W-1) / 2;
-	lY = 0;
-	while(genPositions < DT_H * DT_W - 1)
+	lY = 1;
+	while(genPositions < (DT_H-1) * DT_W - 1)
 	{
-		std::pair<int,int> pos = Constants::computeNextCircularPosition(lX,lY,pP);
+		std::pair<int,int> pos = Constants::computeNextCircularPosition(lX,lY-1,pP);
 		lX = pos.first;
-		lY = pos.second;
+		lY = pos.second+1;
 
 		if(lX >= 0 && lX < DT_W && lY < DT_H)
 		{
 			genPositions++;
 			res.push_back(lX + lY*DT_W);
 		}
+	}
+
+	for(int i=0;i<DT_W;i++)
+	{
+		if(i!=pP) res.push_back(i);
 	}
 
 	return res;
@@ -190,8 +195,6 @@ struct Node
 
 void DeadlockTable::computeDeadlocks(int w, int h, std::set<std::string>& deadlocks)
 {
-	std::vector<int> positions = generateCircularPositions();
-
 	std::queue<Node> toCompute;
 	std::string nStr(w*h,' ');
 	
@@ -215,16 +218,16 @@ void DeadlockTable::computeDeadlocks(int w, int h, std::set<std::string>& deadlo
 			continue;
 		}
 
-		if(node.posToCompute >= positions.size()) continue;
+		if(node.posToCompute >= Constants::gridPositions.size()) continue;
 
 		Node newNode = {node.pos,node.posToCompute+1};
 		toCompute.push(newNode);
 
-		if(node.pos[positions[node.posToCompute]] == ' ')
+		if(node.pos[Constants::gridPositions[node.posToCompute]] == ' ')
 		{
-			newNode.pos[positions[node.posToCompute]] = '$';
+			newNode.pos[Constants::gridPositions[node.posToCompute]] = '$';
 			toCompute.push(newNode);
-			newNode.pos[positions[node.posToCompute]] = '#';
+			newNode.pos[Constants::gridPositions[node.posToCompute]] = '#';
 			toCompute.push(newNode);
 		}
 	}

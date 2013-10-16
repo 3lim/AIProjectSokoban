@@ -119,16 +119,16 @@ int main(void)
 	std::vector<std::string> board;
 	for (std::string line; std::getline(std::cin, line);)
 		board.push_back(line);
+	
+	Constants::gridPositions = DeadlockTable::generateCircularPositions();
 
 	DeadlockTable::computeDeadlocks(DT_W,DT_H,Constants::deadlockTable);
-
-	Constants::gridPositions = DeadlockTable::generateCircularPositions();
 
 	//std::stringstream ss;
 
 	//for(std::string s:board) ss << s;
 
-	//if(DeadlockTable::isDeadlock(ss.str(),board[0].length())) std::wcout << "Deadlock!";
+	//if(Constants::deadlockTable.find(ss.str()) != Constants::deadlockTable.end()) std::wcout << "Deadlock!";
 	//else std::wcout << "No deadlock!";
 
 	//return 0;

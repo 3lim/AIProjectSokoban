@@ -48,10 +48,10 @@ State::State(std::vector<std::string>* map, std::string path, State* parent, std
 		nexts.push_back(make_pair(observedSpot.first+1,observedSpot.second));
 		nexts.push_back(make_pair(observedSpot.first-1,observedSpot.second));
 		for(list<pair<int,int>>::iterator it=nexts.begin();it!=nexts.end();it++){
-			if(!visitedSpot[it->second][it->first] && (*map)[it->second][it->first]!=WALL){
+			if(!visitedSpot[it->second][it->first] && (*map)[it->second][it->first]!=WALL && boxes.find(*it) == boxes.end()){
 				visitedSpot[it->second][it->first] = 1;
 				spots.push((*it));
-				if(min.first>it->first || (min.first==it->first && min.second>it->second)){
+				if(min.second>it->second || (min.second==it->second && min.first>it->first)){
 					min = (*it);
 				}
 			}
@@ -60,7 +60,6 @@ State::State(std::vector<std::string>* map, std::string path, State* parent, std
 	//*/
 	int count = boxes.size();
 	int hash = min.first+(min.second*29);
-	//int hash = player.first+(player.second*29);
 	int i=0;
 	for(auto it=boxes.begin();i<count;it++,i++)
 	{
@@ -74,22 +73,13 @@ State::~State(void)
 {
 }
 
-// IMPORTANT
-// I think we shouldn't compare the player position, instead we should compare if the movable area is identical
-// So if in several states the position of the boxes is identical but the states are reached by pushing different boxes
-// the state aren't regarded as identical even if the same child states could be reached
-
 bool State::operator == (const State &b) const
 {
 	/*if(hash != b.hash){
 		return false;
 	}*/
 
-	if(upperLeftReachable.first!=b.upperLeftReachable.first || upperLeftReachable.second!=b.upperLeftReachable.second){
-		return false;
-	}
-
-	return b.boxes == boxes;
+	return upperLeftReachable==b.upperLeftReachable && b.boxes == boxes;
 }
 
 std::vector<State*> State::getChildStates()
@@ -248,6 +238,26 @@ std::vector<State*> State::getChildStates()
 	return children;
 }
 
+bool goalDeadlockCheck(std::string s)
+{
+	int p = s.find_first_of('*');
+
+	if(p != s.npos)
+	{
+		std::string n(s);
+		n[p] = '$';
+		bool boxDl = goalDeadlockCheck(n);
+		n[p] = '#';
+		bool wallDl = goalDeadlockCheck(n);
+
+		return boxDl && wallDl;
+	}
+	else
+	{
+		return Constants::deadlockTable.find(s) != Constants::deadlockTable.end();
+	}
+}
+
 bool State::isLocked()
 {
 	// Pick moved box
@@ -287,8 +297,6 @@ bool State::isLocked()
 	// State is locked if pushed box is in unpushable position (can't reach any goal)
 	if(Constants::pushablePositions.find(movedBoxPos) == Constants::pushablePositions.end()) return true;
 
-	//return false;
-
 	std::string dlCheck(DT_H * DT_W,' ');
 	
 	int xDiff = (DT_W % 2 == 0 ? DT_W : DT_W-1) / 2;
@@ -302,9 +310,9 @@ bool State::isLocked()
 			int newX = player.first + y * yX + x * xX;
 			dlCheck[j] = (newY < 0 || newY >= (*map).size() || newX < 0 || newX >= (*map)[newY].length()) ? ' ' : (*map)[newY][newX];
 			
-			if(boxes.find(make_pair(newX,newY)) != boxes.end()) dlCheck[j] = '$';
+			if(boxes.find(make_pair(newX,newY)) != boxes.end()) dlCheck[j] = Constants::Goals.find(make_pair(newX,newY)) != Constants::Goals.end() ? '*' : '$';
 			if(y == 0 && x == 0) dlCheck[j] = '@';
-			if(dlCheck[j] == BOX_GOAL) dlCheck[j] = '$';
+			if(dlCheck[j] == BOX_GOAL) dlCheck[j] = '*';
 			if(dlCheck[j] == PLAYER_GOAL) dlCheck[j] = '@';
 			if(dlCheck[j] == GOAL) dlCheck[j] = ' ';
 			j++;
@@ -315,13 +323,31 @@ bool State::isLocked()
 	dlCheckReal[xDiff] = dlCheck[xDiff];
 	dlCheckReal[xDiff + DT_W] = dlCheck[xDiff + DT_W];
 
-	for(int i=0;i<Constants::gridPositions.size();i++)
+	std::pair<std::string,int> start(dlCheckReal,0);
+	std::queue<std::pair<std::string,int>> dlQ;
+
+	dlQ.push(start);
+	while(!dlQ.empty())
 	{
-		if(dlCheckReal[Constants::gridPositions[i]] == ' ') dlCheckReal[Constants::gridPositions[i]] = dlCheck[Constants::gridPositions[i]];
-		
-		if(Constants::deadlockTable.find(dlCheckReal) != Constants::deadlockTable.end()) 
-		{
+		std::pair<std::string,int> dl = dlQ.front();
+		dlQ.pop();
+
+		if(goalDeadlockCheck(dl.first)) 
+		{/*
+					std::cout << path.back() << "->" << movedBoxPos.first << "," << movedBoxPos.second << ": Found deadlock!" << std::endl;
+					Constants::printPos(dl.first,DT_W);
+					Constants::printPos(dlCheck,DT_W);*/
 			return true;
+		}
+
+		if(dl.second >= Constants::gridPositions.size()) continue;
+
+		if(dl.first[Constants::gridPositions[dl.second]] == ' ') 
+		{
+			std::pair<std::string,int> ndl(dl.first,dl.second+1);
+
+			ndl.first[Constants::gridPositions[dl.second]] = dlCheck[Constants::gridPositions[dl.second]];
+			dlQ.push(ndl);
 		}
 	}
 
