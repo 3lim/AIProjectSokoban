@@ -8,6 +8,15 @@
 using namespace std;
 
 
+bool SortPair(std::pair<int,int> a,std::pair<int,int> b)
+{
+	if(a.first!=b.first){
+		return a.first<b.first;
+	}else{
+		return a.second<b.second;
+	}
+}
+
 State::State(std::vector<std::string>* map, std::string path, State* parent, std::set<std::pair<int,int>> boxes, std::pair<int,int> player) : map(map), path(path), parent(parent), boxes(boxes), player(player)
 {
 
@@ -60,12 +69,25 @@ State::State(std::vector<std::string>* map, std::string path, State* parent, std
 	}
 	//*/
 	int count = boxes.size();
-	int hash = min.first+(min.second*29);
+	hash = min.first+(min.second*29);
 	int i=0;
+	
+	vector<pair<int,int>> sortedBoxes;
 	for(auto it=boxes.begin();i<count;it++,i++)
 	{
-		hash = 65599 * hash + (*it).first+((*it).second*29);
+		sortedBoxes.push_back(*it);
 	}
+	std::sort(sortedBoxes.begin(),sortedBoxes.end(),SortPair);
+	for(int j=0;j<count;j++){
+		hash = 65599 * hash + sortedBoxes[j].first+(sortedBoxes[j].second*29);
+	}
+	/*
+
+	for(auto it=boxes.begin();i<count;it++,i++)
+	{
+
+		hash = 65599 * hash + (*it).first+((*it).second*29);
+	}*/
 	upperLeftReachable = min;
 }
 
@@ -377,6 +399,7 @@ bool SortBoxes(Position a,Position b)
 	return a.second.size()<b.second.size();
 }
 
+
 bool findMatching(int i,const std::vector<Position>& pBoxes,std::vector<int>& matching)
 {
 	if(i>=pBoxes.size()) return true;
@@ -527,4 +550,26 @@ void State::print()
 		}
 		std::cout<<endl;
 	}
+	int count =boxes.size();
+	int i=0;
+	vector<pair<int,int>> sortedBoxes;
+	for(auto it=boxes.begin();i<count;it++,i++)
+	{
+		sortedBoxes.push_back(*it);
+	}
+	/*std::cout<<upperLeftReachable.first<< " "<<upperLeftReachable.second<<endl;
+	std::cout<<"--------------------"<<endl;;
+	std::sort(sortedBoxes.begin(),sortedBoxes.end(),SortPair);
+	for(int j=0;j<count;j++){
+		std::cout<<sortedBoxes[j].first<< " "<<sortedBoxes[j].second<<endl;
+	}
+	std::cout<<"--------------------"<<endl;
+	int h = upperLeftReachable.first+(upperLeftReachable.second*29);
+	for(int j=0;j<count;j++){
+		std::cout<<h<<endl;
+		h = 65599 * h + sortedBoxes[j].first+(sortedBoxes[j].second*29);
+		//h =( 65599 * h + sortedBoxes[j].first+(sortedBoxes[j].second*29))%3000;
+	}
+	std::cout<<h<<endl;
+	std::cout<<"--------------------"<<endl;*/
 }
