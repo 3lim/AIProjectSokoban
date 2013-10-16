@@ -232,5 +232,10 @@ void DeadlockTable::computeDeadlocks(int w, int h, std::set<std::string>& deadlo
 		}
 	}
 
-	std::cout << "Computed " << deadlocks.size() << " deadlocks from " << computed << " positions" << std::endl;
+	//std::cout << "Computed " << deadlocks.size() << " deadlocks from " << computed << " positions" << std::endl;
+}
+
+void DeadlockTable::compileDeadlockTable(const std::string table,std::set<std::string>& deadlocks)
+{
+	for(int i=0;i<table.length();i+=DT_W*DT_H) deadlocks.insert(table.substr(i,DT_H*DT_W));
 }

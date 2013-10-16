@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <algorithm>
 #include "Constants.h"
 using namespace std;
 
@@ -333,8 +334,8 @@ bool State::isLocked()
 		dlQ.pop();
 
 		if(goalDeadlockCheck(dl.first)) 
-		{/*
-					std::cout << path.back() << "->" << movedBoxPos.first << "," << movedBoxPos.second << ": Found deadlock!" << std::endl;
+		{
+					/*std::cout << path.back() << "->" << movedBoxPos.first << "," << movedBoxPos.second << ": Found deadlock!" << std::endl;
 					Constants::printPos(dl.first,DT_W);
 					Constants::printPos(dlCheck,DT_W);*/
 			return true;
@@ -371,24 +372,113 @@ bool State::isWin()
 	return true;
 }
 
+bool SortBoxes(Position a,Position b)
+{
+	return a.second.size()<b.second.size();
+}
+
+bool findMatching(int i,const std::vector<Position>& pBoxes,std::vector<int>& matching)
+{
+	if(i>=pBoxes.size()) return true;
+
+	for(std::pair<int,int> reachable:pBoxes[i].second)
+	{
+		int j=0;
+		for(j=0;j<i;j++) if(matching[j] == reachable.first) break;
+
+		if(j!=i) continue;
+
+		matching[i] = reachable.first;
+
+		if(findMatching(i+1,pBoxes,matching)) return true;
+	}
+	return false;
+}
+
+bool SortDistances(std::pair<int,int> a,std::pair<int,int> b)
+{
+	return a.second<b.second;
+}
+
 int State::getHeuristicValue()
 {
 	if(heuristicValue != -1) return heuristicValue;
 
-	int ret=0;
+	//std::cout << heuristicValue << std::endl;
+	return heuristicValue = matchingHeuristic();
+}
+
+int State::minManhattanHeuristic()
+{
+		int ret=0;
+	
 	set<pair<int,int>>::iterator it;
-	for(it=boxes.begin();it!=boxes.end();it++){
-		pair<int,int> box = (*it);
-		pair<int,int> goal  = *Constants::Goals.begin();
-		int dist= abs(box.first-goal.first)+abs(box.second-goal.second);
-		for(auto it=++Constants::Goals.begin();it!=Constants::Goals.end() && dist!=0;it++){
-			goal = *it;
-			dist = min(dist,abs(box.first-goal.first)+abs(box.second-goal.second));
+		for(it=boxes.begin();it!=boxes.end();it++){
+				pair<int,int> box = (*it);
+				pair<int,int> goal  = *Constants::Goals.begin();
+				int dist= abs(box.first-goal.first)+abs(box.second-goal.second);
+				for(auto it=++Constants::Goals.begin();it!=Constants::Goals.end() && dist!=0;it++){
+						goal = *it;
+						dist = min(dist,abs(box.first-goal.first)+abs(box.second-goal.second));
+				}
+				ret+=dist;
 		}
-		ret+=dist;
+
+		return ret;
+}
+
+int State::minPushableHeuristic()
+{
+	int ret = 0;
+		for(auto it=boxes.begin();it!=boxes.end();it++){
+		int min = -1;
+		for(auto p:Constants::pushablePositions[*it])
+		{
+			if(min == -1) 
+			{
+				min = p.second;
+			}
+			else 
+			{
+				min = p.second < min ? p.second : min;
+			}
+		}
+		ret += min;
+	}
+		return ret;
+}
+
+int State::matchingHeuristic()
+{
+	int ret = 0;
+	
+	std::vector<Position> pBoxes;
+
+	for(auto b:boxes)
+	{
+		std::vector<std::pair<int,int>> distances;
+
+		for(std::pair<int,int> r:Constants::pushablePositions[b]) distances.push_back(r);
+
+		sort(distances.begin(),distances.end(),SortDistances);
+
+		pBoxes.push_back(make_pair(b,distances));
 	}
 
-	heuristicValue = ret;
+	std::sort(pBoxes.begin(),pBoxes.end(),SortBoxes);
+
+	std::vector<int> matching;
+
+	for(int i=0;i<pBoxes.size();i++) matching.push_back(-1);
+
+	bool m = findMatching(0,pBoxes,matching);
+	
+	//if(!m) std::cout << "No matching found!" << std::endl;
+
+	
+
+	for(int i=0;i<matching.size();i++) ret += Constants::pushablePositions[pBoxes[i].first][matching[i]];
+
 	return ret;
 }
 

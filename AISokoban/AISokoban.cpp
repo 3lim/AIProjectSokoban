@@ -121,14 +121,26 @@ int main(void)
 		board.push_back(line);
 	
 	Constants::gridPositions = DeadlockTable::generateCircularPositions();
+	DeadlockTable::compileDeadlockTable(DT_DATA,Constants::deadlockTable);
 
-	DeadlockTable::computeDeadlocks(DT_W,DT_H,Constants::deadlockTable);
+	// Uncomment for deadlock table generation
+	
+	//DeadlockTable::computeDeadlocks(DT_W,DT_H,Constants::deadlockTable);
+	//for(std::string s:Constants::deadlockTable) std::cout << s;
+	//return 0;
+	
+	// --- 
 
 	//std::stringstream ss;
 
 	//for(std::string s:board) ss << s;
 
-	//if(Constants::deadlockTable.find(ss.str()) != Constants::deadlockTable.end()) std::wcout << "Deadlock!";
+	//if(DeadlockTable::isDeadlock(ss.str(),DT_W)) std::wcout << "Deadlock!";
+	//else std::wcout << "No deadlock!";
+
+	//return 0;
+
+	//if(Constants::deadlockTable.find(ss.str())!=Constants::deadlockTable.end()) std::wcout << "Deadlock!";
 	//else std::wcout << "No deadlock!";
 
 	//return 0;
@@ -165,7 +177,7 @@ int main(void)
 	}
 	
 	computePushablePositionData(goals,board,Constants::pushablePositions);
-	std::cout << "Computed static position data" << std::endl;
+	//std::cout << "Computed static position data" << std::endl;
 
 	State* initState = new State(&board,"",NULL,boxes,player);
 	Constants::Goals = goals;
@@ -177,7 +189,7 @@ int main(void)
 
 	//list of all seen states
 
-	std::unordered_set<State*> visitedStates;
+	std::set<State*> visitedStates;
 
 	//currentStates.push_back(initState);
 	currentStates.push(initState);
@@ -191,6 +203,7 @@ int main(void)
 		currentStates.pop();
 		
 		statesExpanded++;
+		//if(statesExpanded % 2000 == 0) std::cout << "States expanded: " << statesExpanded << std::endl;
 
 		visitedStates.insert(state);
 
@@ -228,8 +241,8 @@ int main(void)
 		
 	}
 	
-	std::cout << statesExpanded << std::endl;
-	
+	//std::cout << statesExpanded << std::endl;
+
 	// Output answer
 	if(endState==NULL)
 	{

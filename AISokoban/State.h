@@ -22,6 +22,9 @@ public:
 	void print();
 	static std::vector<std::pair<int,int>> goals;
 private:
+	int matchingHeuristic();
+	int minPushableHeuristic();
+	int minManhattanHeuristic();
 	std::set<std::pair<int,int>> boxes;
 	std::pair<int,int> player;
 	std::string path;
@@ -38,3 +41,5 @@ struct StateNode
 	std::pair<int,int> node;
 	std::string path; // path travelled to reach this node
 };
+
+typedef std::pair<std::pair<int,int>,std::vector<std::pair<int,int>>> Position;
