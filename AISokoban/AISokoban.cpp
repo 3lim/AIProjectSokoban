@@ -122,6 +122,17 @@ int main(void)
 
 	DeadlockTable::computeDeadlocks(DT_W,DT_H,Constants::deadlockTable);
 
+	Constants::gridPositions = DeadlockTable::generateCircularPositions();
+
+	//std::stringstream ss;
+
+	//for(std::string s:board) ss << s;
+
+	//if(DeadlockTable::isDeadlock(ss.str(),board[0].length())) std::wcout << "Deadlock!";
+	//else std::wcout << "No deadlock!";
+
+	//return 0;
+	
 	std::set<std::pair<int,int>> boxes;
 	std::set<std::pair<int,int>> goals;
 	
@@ -170,7 +181,6 @@ int main(void)
 
 	//currentStates.push_back(initState);
 	currentStates.push(initState);
-	visitedStates.insert(initState);
 
 	int statesExpanded = 0;
 	while(!currentStates.empty() && endState==NULL)
@@ -181,7 +191,6 @@ int main(void)
 		currentStates.pop();
 		
 		statesExpanded++;
-		std::cout << statesExpanded << std::endl;
 
 		visitedStates.insert(state);
 
@@ -218,6 +227,8 @@ int main(void)
 		//std::cout << currentStates.size() << std::endl;
 		
 	}
+	
+	std::cout << statesExpanded << std::endl;
 	
 	// Output answer
 	if(endState==NULL)

@@ -102,10 +102,10 @@ std::vector<State*> State::getChildStates()
 	
 	
 	// Start of the search
-	Node start = {player,""};
+	StateNode start = {player,""};
 
 	
-	queue<Node> frontier;
+	queue<StateNode> frontier;
 	
 	frontier.push(start);
 	
@@ -129,7 +129,7 @@ std::vector<State*> State::getChildStates()
 	{
 		
 		//BFS SEARCH: first element of the list is taken
-		Node observedNode = frontier.front();
+		StateNode observedNode = frontier.front();
 		frontier.pop();
 		
 		//keeping track of the upper left point visited to compute hash later on.
@@ -139,7 +139,7 @@ std::vector<State*> State::getChildStates()
 		{
 			//UP CASE
 			pair<int,int> upNodePosition(observedNode.node.first,observedNode.node.second-1);
-			Node upNode = {upNodePosition,observedNode.path+'U'};
+			StateNode upNode = {upNodePosition,observedNode.path+'U'};
 			pair<int, int> doubleUpPosition(observedNode.node.first,observedNode.node.second-2);
 			if (boxes.find(upNode.node) != boxes.end() && (*map)[doubleUpPosition.second][doubleUpPosition.first] !='#' && boxes.find(doubleUpPosition) == boxes.end()) //If the slot above the player position contains a box, a child state is created where the box has been pushed up
 			{
@@ -164,7 +164,7 @@ std::vector<State*> State::getChildStates()
 			
 			//RIGHT CASE
 			pair<int,int> rightPosition(observedNode.node.first+1,observedNode.node.second);
-			Node rightNode = {rightPosition,observedNode.path+'R'};
+			StateNode rightNode = {rightPosition,observedNode.path+'R'};
 			pair<int, int> doubleRightPosition(observedNode.node.first+2,observedNode.node.second);
 			if (boxes.find(rightNode.node) != boxes.end() && (*map)[doubleRightPosition.second][doubleRightPosition.first] !='#' && boxes.find(doubleRightPosition) == boxes.end()) //If the slot on the right of the player position contains a box and the move is possible a child state is created where the box has been pushed right
 			{
@@ -189,7 +189,7 @@ std::vector<State*> State::getChildStates()
 			
 			//DOWN CASE
 			pair<int,int> downPosition(observedNode.node.first,observedNode.node.second+1);
-			Node downNode = {downPosition,observedNode.path+'D'};
+			StateNode downNode = {downPosition,observedNode.path+'D'};
 			pair<int,int> doubleDownPosition(observedNode.node.first,observedNode.node.second+2);
 			if (boxes.find(downPosition) != boxes.end() && (*map)[doubleDownPosition.second][doubleDownPosition.first] !='#' && boxes.find(doubleDownPosition) == boxes.end()) //If the slot on the right of the player position contains a box and the move is possible a child state is created where the box has been pushed right
 			{
@@ -214,7 +214,7 @@ std::vector<State*> State::getChildStates()
 			
 			//LEFT CASE
 			pair<int,int> leftPosition(observedNode.node.first-1,observedNode.node.second);
-			Node leftNode = {leftPosition,observedNode.path+'L'};
+			StateNode leftNode = {leftPosition,observedNode.path+'L'};
 			pair<int,int> doubleLeftPosition(observedNode.node.first-2,observedNode.node.second);
 			if (boxes.find(leftPosition) != boxes.end() && (*map)[doubleLeftPosition.second][doubleLeftPosition.first] !='#' && boxes.find(doubleLeftPosition) == boxes.end()) //If the slot on the right of the player position contains a box and the move is possible a child state is created where the box has been pushed right
 			{
@@ -286,7 +286,9 @@ bool State::isLocked()
 
 	// State is locked if pushed box is in unpushable position (can't reach any goal)
 	if(Constants::pushablePositions.find(movedBoxPos) == Constants::pushablePositions.end()) return true;
-	
+
+	//return false;
+
 	std::string dlCheck(DT_H * DT_W,' ');
 	
 	int xDiff = (DT_W % 2 == 0 ? DT_W : DT_W-1) / 2;
@@ -299,6 +301,9 @@ bool State::isLocked()
 			int newY = player.second + y * yY + x * xY;
 			int newX = player.first + y * yX + x * xX;
 			dlCheck[j] = (newY < 0 || newY >= (*map).size() || newX < 0 || newX >= (*map)[newY].length()) ? ' ' : (*map)[newY][newX];
+			
+			if(boxes.find(make_pair(newX,newY)) != boxes.end()) dlCheck[j] = '$';
+			if(y == 0 && x == 0) dlCheck[j] = '@';
 			if(dlCheck[j] == BOX_GOAL) dlCheck[j] = '$';
 			if(dlCheck[j] == PLAYER_GOAL) dlCheck[j] = '@';
 			if(dlCheck[j] == GOAL) dlCheck[j] = ' ';
@@ -306,83 +311,18 @@ bool State::isLocked()
 		}
 	}
 
-	if(Constants::deadlockTable.find(dlCheck) != Constants::deadlockTable.end()) return true;
+	std::string dlCheckReal(DT_H * DT_W,' ');
+	dlCheckReal[xDiff] = dlCheck[xDiff];
+	dlCheckReal[xDiff + DT_W] = dlCheck[xDiff + DT_W];
 
-	return false;
-
-	for(auto it=boxes.begin();it!=boxes.end();it++)
+	for(int i=0;i<Constants::gridPositions.size();i++)
 	{
-		// Box on goal
-		if(Constants::Goals.find(*it)!=Constants::Goals.end()) continue;
+		if(dlCheckReal[Constants::gridPositions[i]] == ' ') dlCheckReal[Constants::gridPositions[i]] = dlCheck[Constants::gridPositions[i]];
 		
-		bool blockedRight = (*map)[it->second][it->first+1] == '#';
-		bool blockedLeft = (*map)[it->second][it->first-1] == '#';
-		bool blockedUp = (*map)[it->second-1][it->first] == '#';
-		bool blockedDown = (*map)[it->second+1][it->first] == '#';
-		
-		bool boxRight = boxes.find(std::pair<int,int>(it->first+1,it->second))!=boxes.end();
-		bool boxLeft = boxes.find(std::pair<int,int>(it->first-1,it->second))!=boxes.end();
-		bool boxUp = boxes.find(std::pair<int,int>(it->first,it->second-1))!=boxes.end();
-		bool boxDown = boxes.find(std::pair<int,int>(it->first,it->second+1))!=boxes.end();
-
-		//// Box in corner
-		///* #
-		//   $# */
-		//if(blockedLeft)
-		//{
-		//	if(blockedUp || blockedDown) return true;
-		//}
-		//if(blockedRight)
-		//{
-		//	if(blockedUp || blockedDown) return true;
-		//}
-
-		if(boxRight)
+		if(Constants::deadlockTable.find(dlCheckReal) != Constants::deadlockTable.end()) 
 		{
-			// Box blocked by other box
-			/* #$
-			   #$ */
-			if((blockedUp || blockedDown) && ((*map)[it->second-1][it->first+1] == '#' || (*map)[it->second+1][it->first+1] == '#')) return true;
-			
-			// 4 Boxes in square or with a wall
-			/* $$     #$
-			   $$     $$ */
-			if((blockedDown || boxDown) && boxes.find(std::pair<int,int>(it->first+1,it->second+1))!=boxes.end()) return true;
-
-			if((blockedUp || boxUp) && boxes.find(std::pair<int,int>(it->first+1,it->second-1))!=boxes.end()) return true;
+			return true;
 		}
-
-		if(boxLeft)
-		{
-			// Box blocked by other box
-			/* #$
-			   #$ */
-			if((blockedUp || blockedDown) && ((*map)[it->second-1][it->first-1] == '#' || (*map)[it->second+1][it->first-1] == '#')) return true;
-
-			// 4 Boxes in square or with a wall
-			/* $$     #$
-			   $$     $$ */
-			if((blockedDown || boxDown) && boxes.find(std::pair<int,int>(it->first-1,it->second+1))!=boxes.end()) return true;
-
-			if((blockedUp || boxUp) && boxes.find(std::pair<int,int>(it->first-1,it->second-1))!=boxes.end()) return true;
-		}
-
-		if(boxDown)
-		{
-			// Box blocked by other box
-			/* #$
-			   #$ */
-			if((blockedLeft || blockedRight) && ((*map)[it->second+1][it->first+1] == '#' || (*map)[it->second+1][it->first-1] == '#')) return true;
-		}
-		
-		if(boxUp)
-		{
-			// Box blocked by other box
-			/* #$
-			   #$ */
-			if((blockedLeft || blockedRight) && ((*map)[it->second-1][it->first+1] == '#' || (*map)[it->second-1][it->first-1] == '#')) return true;
-		}
-
 	}
 
 	return false;

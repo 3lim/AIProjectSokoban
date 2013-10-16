@@ -33,7 +33,7 @@ private:
 	std::pair<int,int> upperLeftReachable;
 };
 
-struct Node
+struct StateNode
 {
 	std::pair<int,int> node;
 	std::string path; // path travelled to reach this node

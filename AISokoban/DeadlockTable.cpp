@@ -5,13 +5,52 @@
 #include <sstream>
 #include "DeadlockTable.h"
 
+struct DeadlockNode
+{
+	std::string pos;
+	int numBoxes;
+};
+
+class CompareDeadlockNodeQueue
+{
+public:
+  bool operator() (const DeadlockNode& a, const DeadlockNode& b) const
+  {
+	  return a.numBoxes>b.numBoxes;
+  }
+};
+
+std::vector<int> DeadlockTable::generateCircularPositions()
+{
+	std::vector<int> res;
+	int genPositions = 0;
+	int lX,lY,pP;
+	pP = lX = DT_W % 2 == 0 ? DT_W / 2 : (DT_W-1) / 2;
+	lY = 0;
+	while(genPositions < DT_H * DT_W - 1)
+	{
+		std::pair<int,int> pos = Constants::computeNextCircularPosition(lX,lY,pP);
+		lX = pos.first;
+		lY = pos.second;
+
+		if(lX >= 0 && lX < DT_W && lY < DT_H)
+		{
+			genPositions++;
+			res.push_back(lX + lY*DT_W);
+		}
+	}
+
+	return res;
+}
+
 bool DeadlockTable::isDeadlock(std::string dl, int w)
 {
 	std::stringstream ss;
 	std::string wdl(w+1,' ');
 	
 	std::set<std::string> visited;
-	std::queue<std::string> q;
+
+	std::priority_queue<DeadlockNode,std::vector<DeadlockNode>,CompareDeadlockNodeQueue> q;
 
 	// Pad with spaces because of eventual walls
 	ss << wdl;
@@ -19,97 +58,123 @@ bool DeadlockTable::isDeadlock(std::string dl, int w)
 	{
 		ss << "  " << dl.substr(i,w);
 	}
-	ss << wdl;
+	ss << "  " << wdl;
 	dl = ss.str();
 	w+=2;
 
-	q.push(dl);
+	DeadlockNode node = {dl,0};
+	q.push(node);
 
+	int expanded = 0;
 	while(!q.empty())
 	{
-		std::string p = q.front();
+		DeadlockNode p = q.top();
 		q.pop();
 
-		if(visited.find(p) != visited.end()) continue;
+		if(visited.find(p.pos) != visited.end()) continue;
 
-		visited.insert(p);
+		visited.insert(p.pos);
 
-		if(p.find('$') == p.npos) return false;
+		if(p.pos.find('$') == p.pos.npos) return false;
 
-		int pPos = p.find('@');
+		int pPos = p.pos.find('@');
 		int pX = pPos % w;
 		int pY = pPos / w;
 
 		if(pX > 0)
 		{
-			if(p[pPos-1] == ' ') 
+			if(p.pos[pPos-1] == ' ') 
 			{
-				std::string n(p);
+				DeadlockNode nNode;
+				std::string n(p.pos);
 				n[pPos-1] = '@';
 				n[pPos] = ' ';
-				q.push(n);
+				nNode.pos = n;
+				nNode.numBoxes = p.numBoxes;
+				q.push(nNode);
 			}
-			else if(p[pPos-1] == '$' && (pX == 1 || p[pPos-2] == ' ')) 
+			else if(p.pos[pPos-1] == '$' && (pX == 1 || p.pos[pPos-2] == ' ')) 
 			{
-				std::string n(p);
+				DeadlockNode nNode;
+				std::string n(p.pos);
 				if(pX>2) n[pPos-2] = '$';
 				n[pPos-1] = '@';
 				n[pPos] = ' ';
-				q.push(n);
+				nNode.pos = n;
+				nNode.numBoxes = pX <= 2 ? p.numBoxes-1 : p.numBoxes;
+				q.push(nNode);
 			}
 		}
 		if(pY > 0)
 		{
-			if(p[(pY-1)*w + pX] == ' ') 
+			if(p.pos[(pY-1)*w + pX] == ' ') 
 			{
-				std::string n(p);
+				DeadlockNode nNode;
+				std::string n(p.pos);
 				n[(pY-1)*w + pX] = '@';
 				n[pPos] = ' ';
-				q.push(n);
+				nNode.pos = n;
+				nNode.numBoxes = p.numBoxes;
+				q.push(nNode);
 			}
-			else if(p[(pY-1)*w + pX] == '$' && (pY == 1 || p[(pY-2)*w + pX] == ' ')) 
+			else if(p.pos[(pY-1)*w + pX] == '$' && (pY == 1 || p.pos[(pY-2)*w + pX] == ' ')) 
 			{
-				std::string n(p);
+				DeadlockNode nNode;
+				std::string n(p.pos);
 				if(pY>2) n[(pY-2)*w + pX] = '$';
 				n[(pY-1)*w + pX] = '@';
 				n[pPos] = ' ';
-				q.push(n);
+				nNode.pos = n;
+				nNode.numBoxes = pY <= 2 ? p.numBoxes-1 : p.numBoxes;
+				q.push(nNode);
 			}
 		}
 		if(pX < w-1)
 		{
-			if(p[pPos+1] == ' ') 
+			if(p.pos[pPos+1] == ' ') 
 			{
-				std::string n(p);
+				DeadlockNode nNode;
+				std::string n(p.pos);
 				n[pPos+1] = '@';
 				n[pPos] = ' ';
-				q.push(n);
+				nNode.pos = n;
+				nNode.numBoxes = p.numBoxes;
+				q.push(nNode);
 			}
-			else if(p[pPos+1] == '$' && (pX == w-2 || p[pPos+2] == ' ')) 
+			else if(p.pos[pPos+1] == '$' && (pX == w-2 || p.pos[pPos+2] == ' ')) 
 			{
-				std::string n(p);
+				DeadlockNode nNode;
+				std::string n(p.pos);
 				if(pX<w-3) n[pPos+2] = '$';
 				n[pPos+1] = '@';
 				n[pPos] = ' ';
-				q.push(n);
+				nNode.pos = n;
+				nNode.numBoxes = pX >= w-3 ? p.numBoxes-1 : p.numBoxes;
+				q.push(nNode);
 			}
 		}
-		if(pY < p.length()/w - 1)
+		if(pY < p.pos.length()/w - 1)
 		{
-			if(p[(pY+1)*w + pX] == ' ') 
+			if(p.pos[(pY+1)*w + pX] == ' ') 
 			{
-				std::string n(p);
+				DeadlockNode nNode;
+				std::string n(p.pos);
 				n[(pY+1)*w + pX] = '@';
 				n[pPos] = ' ';
-				q.push(n);
+				nNode.pos = n;
+				nNode.numBoxes = p.numBoxes;
+				q.push(nNode);
 			}
-			else if(p[(pY+1)*w + pX] == '$' && (pY == p.length()/w - 2 || p[(pY+2)*w + pX] == ' ')) 
+			else if(p.pos[(pY+1)*w + pX] == '$' && (pY == p.pos.length()/w - 2 || p.pos[(pY+2)*w + pX] == ' ')) 
 			{
-				std::string n(p);
-				if(pY<p.length()/w - 3) n[(pY+2)*w + pX] = '$';
+				DeadlockNode nNode;
+				std::string n(p.pos);
+				if(pY<p.pos.length()/w - 3) n[(pY+2)*w + pX] = '$';
 				n[(pY+1)*w + pX] = '@';
 				n[pPos] = ' ';
-				q.push(n);
+				nNode.pos = n;
+				nNode.numBoxes = pX >= p.pos.length()/w - 3 ? p.numBoxes-1 : p.numBoxes;
+				q.push(nNode);
 			}
 		}
 	}
@@ -125,8 +190,10 @@ struct Node
 
 void DeadlockTable::computeDeadlocks(int w, int h, std::set<std::string>& deadlocks)
 {
+	std::vector<int> positions = generateCircularPositions();
+
 	std::queue<Node> toCompute;
-	std::string nStr(w*w,' ');
+	std::string nStr(w*h,' ');
 	
 	nStr[w % 2 == 0 ? w / 2 : (w-1) / 2] = '@';
 	nStr[w + (w % 2 == 0 ? w / 2 : (w-1) / 2)] = '$';
@@ -134,10 +201,13 @@ void DeadlockTable::computeDeadlocks(int w, int h, std::set<std::string>& deadlo
 	Node n = {nStr,0};
 	toCompute.push(n);
 
+	int computed = 0;
 	while(!toCompute.empty())
 	{
 		Node node = toCompute.front();
 		toCompute.pop();
+
+		computed++;
 
 		if(DeadlockTable::isDeadlock(node.pos,w))
 		{
@@ -145,17 +215,19 @@ void DeadlockTable::computeDeadlocks(int w, int h, std::set<std::string>& deadlo
 			continue;
 		}
 
-		if(node.posToCompute >= node.pos.length()) continue;
+		if(node.posToCompute >= positions.size()) continue;
 
 		Node newNode = {node.pos,node.posToCompute+1};
 		toCompute.push(newNode);
 
-		if(node.pos[node.posToCompute] == ' ')
+		if(node.pos[positions[node.posToCompute]] == ' ')
 		{
-			newNode.pos[node.posToCompute] = '$';
+			newNode.pos[positions[node.posToCompute]] = '$';
 			toCompute.push(newNode);
-			newNode.pos[node.posToCompute] = '#';
+			newNode.pos[positions[node.posToCompute]] = '#';
 			toCompute.push(newNode);
 		}
 	}
+
+	std::cout << "Computed " << deadlocks.size() << " deadlocks from " << computed << " positions" << std::endl;
 }
