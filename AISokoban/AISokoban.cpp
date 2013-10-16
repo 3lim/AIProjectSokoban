@@ -42,7 +42,7 @@ class comparison
 public:
   bool operator() (State* const &  lhs, State* const & rhs) const
   {
-	  return lhs->getHeuristicValue()>rhs->getHeuristicValue();
+	  return lhs->getPathLength()+lhs->getHeuristicValue()>rhs->getPathLength()+rhs->getHeuristicValue();
   }
 };
 
