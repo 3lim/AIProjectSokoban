@@ -57,7 +57,6 @@ State::State(std::vector<std::string>* map, std::string path, State* parent, std
 			}
 		}
 	}
-	//*/
 
 	int count = boxes.size();
 	hash = min.first+(min.second*29);
@@ -66,7 +65,7 @@ State::State(std::vector<std::string>* map, std::string path, State* parent, std
 	for(auto it=boxes.begin();i<count;it++,i++)
 	{
 		this->hash = 1109 * this->hash + (*it).first+((*it).second*29);
-	}*/
+	}
 	upperLeftReachable = min;
 
 	getHeuristicValue();
