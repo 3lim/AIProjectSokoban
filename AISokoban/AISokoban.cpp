@@ -23,6 +23,7 @@ namespace std {
   {
 	std::size_t operator()(State* const& state) const
 	{
+	  // std::cout << "hash" <<std::endl;
 	  return state->getHash();
 	}
   };
@@ -30,6 +31,7 @@ namespace std {
   template <> struct equal_to<State*> : binary_function <State*,State*,bool> {
 	  bool operator() (State* const & x,  State* const & y) const 
 	  {
+		  //std::cout << "equals" <<std::endl;
 		  return (*x)==(*y);
 	  }
 	};
@@ -40,7 +42,7 @@ class comparison
 public:
   bool operator() (State* const &  lhs, State* const & rhs) const
   {
-	  return lhs->getHeuristicValue()>rhs->getHeuristicValue();
+	  return lhs->getPathLength()+lhs->getHeuristicValue()>rhs->getPathLength()+rhs->getHeuristicValue();
   }
 };
 
@@ -200,7 +202,6 @@ int main(void)
 
 	//currentStates.push_back(initState);
 	currentStates.push(initState);
-
 	int statesExpanded = 0;
 	while(!currentStates.empty() && endState==NULL)
 	{
@@ -212,7 +213,35 @@ int main(void)
 		//state->print();
 		
 		statesExpanded++;
-		//if(statesExpanded % 2000 == 0) std::cout << "States expanded: " << statesExpanded << std::endl;
+		/*if(statesExpanded % 2000 == 0){
+			std::cout << "States expanded: " << statesExpanded << std::endl;
+			state->print();
+			std::cout<<state->getHash()<<std::endl;
+		}*/
+
+		/*if(statesExpanded == 2000){
+			std::cout << "States expanded: " << statesExpanded << std::endl;
+			state->print();
+			std::cout<<state->getHash()<<std::endl;
+			state2000=state;
+		}
+
+		if(statesExpanded == 5000){
+			std::cout << "States expanded: " << statesExpanded << std::endl;
+			state->print();
+			std::cout<<state->getHash()<<std::endl;
+			std::cout<<"equals : "<<(state==state2000)<< " " << true <<std::endl;
+			return 0;
+		}*/
+
+		/*std::cout << statesExpanded << std::endl;
+		state->print();
+		std::cout << state->getHash() << std::endl;
+		std::cout <<"------------------------"<< std::endl;
+		if(statesExpanded>30){
+			
+			return 0;
+		}*/
 
 		visitedStates.insert(state);
 
@@ -242,7 +271,11 @@ int main(void)
 			{
 				//std::cout<<"adding a state"<< std::endl;
 				//check if lock state
-				if(!(*it)->isLocked()) currentStates.push(*it);
+				if(!(*it)->isLocked()){
+					currentStates.push(*it);
+				}else{
+					delete(*it);
+				}
 			}
 		}
 		

@@ -7,7 +7,6 @@
 #include "Constants.h"
 using namespace std;
 
-
 State::State(std::vector<std::string>* map, std::string path, State* parent, std::set<std::pair<int,int>> boxes, std::pair<int,int> player) : map(map), path(path), parent(parent), boxes(boxes), player(player)
 {
 
@@ -61,12 +60,13 @@ State::State(std::vector<std::string>* map, std::string path, State* parent, std
 	//*/
 
 	int count = boxes.size();
-	this->hash = min.first+(min.second*29);
+	hash = min.first+(min.second*29);
 	int i=0;
+	
 	for(auto it=boxes.begin();i<count;it++,i++)
 	{
 		this->hash = 1109 * this->hash + (*it).first+((*it).second*29);
-	}
+	}*/
 	upperLeftReachable = min;
 
 	getHeuristicValue();
@@ -529,4 +529,5 @@ void State::print()
 		}
 		std::cout<<endl;
 	}
+
 }
