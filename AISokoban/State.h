@@ -3,7 +3,10 @@
 #include <list>
 #include <set>
 #include <string>
+#include "DeadlockTable.h"
 #include "Constants.h"
+
+typedef std::pair<std::pair<int,int>,std::vector<std::pair<int,int>>> Position;
 
 class State
 {
@@ -15,7 +18,7 @@ public:
 	bool isLocked();
 	bool isWin();
 	int getHeuristicValue();
-	int getHash() const;
+	long getHash() const;
 	std::string getPath();
 	State* getParent();
 	int getPathLength();
@@ -32,8 +35,14 @@ private:
 	std::vector<std::string>* map;
 	int pathLength;
 	int heuristicValue;
-	int hash;
+	long hash;
 	std::pair<int,int> upperLeftReachable;
+	bool matchingFound;
+	
+	// For debugging
+	std::vector<std::pair<int,int>> boxGoalMatching;
+	std::vector<Position> sortedBoxes;
+	// -
 };
 
 struct StateNode
@@ -41,5 +50,3 @@ struct StateNode
 	std::pair<int,int> node;
 	std::string path; // path travelled to reach this node
 };
-
-typedef std::pair<std::pair<int,int>,std::vector<std::pair<int,int>>> Position;

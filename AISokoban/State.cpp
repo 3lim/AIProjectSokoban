@@ -59,14 +59,17 @@ State::State(std::vector<std::string>* map, std::string path, State* parent, std
 		}
 	}
 	//*/
+
 	int count = boxes.size();
-	int hash = min.first+(min.second*29);
+	this->hash = min.first+(min.second*29);
 	int i=0;
 	for(auto it=boxes.begin();i<count;it++,i++)
 	{
-		hash = 65599 * hash + (*it).first+((*it).second*29);
+		this->hash = 1109 * this->hash + (*it).first+((*it).second*29);
 	}
 	upperLeftReachable = min;
+
+	getHeuristicValue();
 }
 
 
@@ -239,26 +242,6 @@ std::vector<State*> State::getChildStates()
 	return children;
 }
 
-bool goalDeadlockCheck(std::string s)
-{
-	int p = s.find_first_of('*');
-
-	if(p != s.npos)
-	{
-		std::string n(s);
-		n[p] = '$';
-		bool boxDl = goalDeadlockCheck(n);
-		n[p] = '#';
-		bool wallDl = goalDeadlockCheck(n);
-
-		return boxDl && wallDl;
-	}
-	else
-	{
-		return Constants::deadlockTable.find(s) != Constants::deadlockTable.end();
-	}
-}
-
 bool State::isLocked()
 {
 	// Pick moved box
@@ -293,16 +276,20 @@ bool State::isLocked()
 	}
 	
 	
-	if(Constants::Goals.find(movedBoxPos)!=Constants::Goals.end()) return false;
+	bool onGoal = Constants::Goals.find(movedBoxPos)!=Constants::Goals.end();
 
 	// State is locked if pushed box is in unpushable position (can't reach any goal)
-	if(Constants::pushablePositions.find(movedBoxPos) == Constants::pushablePositions.end()) return true;
+	if(Constants::pushablePositions[movedBoxPos].size() == 0) return true;
+
+	// State is locked if no (static) matching can be found
+	if(!matchingFound) return true;
 
 	std::string dlCheck(DT_H * DT_W,' ');
 	
 	int xDiff = (DT_W % 2 == 0 ? DT_W : DT_W-1) / 2;
 	int yDiff = DT_H;
 	int j = 0;
+	int numBoxes = 0;
 	for(int y = 0; y < yDiff; y++)
 	{
 		for(int x = - xDiff; x <= xDiff; x++)
@@ -311,7 +298,11 @@ bool State::isLocked()
 			int newX = player.first + y * yX + x * xX;
 			dlCheck[j] = (newY < 0 || newY >= (*map).size() || newX < 0 || newX >= (*map)[newY].length()) ? ' ' : (*map)[newY][newX];
 			
-			if(boxes.find(make_pair(newX,newY)) != boxes.end()) dlCheck[j] = Constants::Goals.find(make_pair(newX,newY)) != Constants::Goals.end() ? '*' : '$';
+			if(boxes.find(make_pair(newX,newY)) != boxes.end()) 
+			{
+					dlCheck[j] = Constants::Goals.find(make_pair(newX,newY)) != Constants::Goals.end() ? '*' : '$';
+					numBoxes++;
+			}
 			if(y == 0 && x == 0) dlCheck[j] = '@';
 			if(dlCheck[j] == BOX_GOAL) dlCheck[j] = '*';
 			if(dlCheck[j] == PLAYER_GOAL) dlCheck[j] = '@';
@@ -320,39 +311,7 @@ bool State::isLocked()
 		}
 	}
 
-	std::string dlCheckReal(DT_H * DT_W,' ');
-	dlCheckReal[xDiff] = dlCheck[xDiff];
-	dlCheckReal[xDiff + DT_W] = dlCheck[xDiff + DT_W];
-
-	std::pair<std::string,int> start(dlCheckReal,0);
-	std::queue<std::pair<std::string,int>> dlQ;
-
-	dlQ.push(start);
-	while(!dlQ.empty())
-	{
-		std::pair<std::string,int> dl = dlQ.front();
-		dlQ.pop();
-
-		if(goalDeadlockCheck(dl.first)) 
-		{
-					/*std::cout << path.back() << "->" << movedBoxPos.first << "," << movedBoxPos.second << ": Found deadlock!" << std::endl;
-					Constants::printPos(dl.first,DT_W);
-					Constants::printPos(dlCheck,DT_W);*/
-			return true;
-		}
-
-		if(dl.second >= Constants::gridPositions.size()) continue;
-
-		if(dl.first[Constants::gridPositions[dl.second]] == ' ') 
-		{
-			std::pair<std::string,int> ndl(dl.first,dl.second+1);
-
-			ndl.first[Constants::gridPositions[dl.second]] = dlCheck[Constants::gridPositions[dl.second]];
-			dlQ.push(ndl);
-		}
-	}
-
-	return false;
+	return DeadlockTable::checkForDeadlock(dlCheck);
 }
 
 bool State::isWin()
@@ -374,25 +333,7 @@ bool State::isWin()
 
 bool SortBoxes(Position a,Position b)
 {
-	return a.second.size()<b.second.size();
-}
-
-bool findMatching(int i,const std::vector<Position>& pBoxes,std::vector<int>& matching)
-{
-	if(i>=pBoxes.size()) return true;
-
-	for(std::pair<int,int> reachable:pBoxes[i].second)
-	{
-		int j=0;
-		for(j=0;j<i;j++) if(matching[j] == reachable.first) break;
-
-		if(j!=i) continue;
-
-		matching[i] = reachable.first;
-
-		if(findMatching(i+1,pBoxes,matching)) return true;
-	}
-	return false;
+	return a.second.size()==b.second.size() ? a.second[0].second<b.second[0].second : a.second.size()<b.second.size();
 }
 
 bool SortDistances(std::pair<int,int> a,std::pair<int,int> b)
@@ -448,6 +389,43 @@ int State::minPushableHeuristic()
 		return ret;
 }
 
+bool findMatching(int i,const std::vector<Position>& pBoxes,std::vector<std::pair<int,int>>& matching)
+{
+	if(i>=pBoxes.size()) return true;
+/*
+	std::string padding(2*i,' ');
+	std::cout << padding << i << ":" << std::endl;*/
+
+	for(std::pair<int,int> reachable:pBoxes[i].second)
+	{
+		//std::cout << padding << reachable.first << std::endl;
+		int j=0;
+		for(;j<i;j++) 
+		{
+			if(matching[j].first == reachable.first) 
+			{
+				//std::cout << padding << reachable.first << " found at " << j << std::endl;
+				break;
+			}
+		}
+
+		if(j!=i) 
+		{
+			//std::cout << padding << "... continuing." << std::endl;
+			continue;
+		}
+
+		matching[i] = reachable;
+
+		if(findMatching(i+1,pBoxes,matching)) 
+		{
+			//std::cout << padding << "Found matching!" << std::endl;
+			return true;
+		}
+	}
+	return false;
+}
+
 int State::matchingHeuristic()
 {
 	int ret = 0;
@@ -467,22 +445,24 @@ int State::matchingHeuristic()
 
 	std::sort(pBoxes.begin(),pBoxes.end(),SortBoxes);
 
-	std::vector<int> matching;
+	std::vector<std::pair<int,int>> matching;
 
-	for(int i=0;i<pBoxes.size();i++) matching.push_back(-1);
+	matching.resize(pBoxes.size());
 
-	bool m = findMatching(0,pBoxes,matching);
-	
-	//if(!m) std::cout << "No matching found!" << std::endl;
+	this->matchingFound = findMatching(0,pBoxes,matching);
 
-	
+	for(int i=0;i<matching.size();i++) ret += matching[i].second;
 
-	for(int i=0;i<matching.size();i++) ret += Constants::pushablePositions[pBoxes[i].first][matching[i]];
+
+	// For debugging
+	boxGoalMatching = matching;
+	sortedBoxes = pBoxes;
+	// --
 
 	return ret;
 }
 
-int State::getHash() const
+long State::getHash() const
 {
 	return hash;
 }
@@ -506,6 +486,28 @@ int State::getPathLength()
 
 void State::print()
 {
+	std::cout << hash << std::endl << "Boxes: ";
+	for(std::pair<int,int> b:boxes) std::cout << "(" << b.first << "," << b.second << ")";
+	std::cout << std::endl << "Player movement: " << upperLeftReachable.first << "," << upperLeftReachable.second << std::endl;
+	std::cout << "Matching: ";
+
+	int ii=0;
+	for(int i=0;i<boxGoalMatching.size();i++) 
+	{
+		std::cout << "(" << sortedBoxes[ii].first.first << "," << sortedBoxes[ii].first.second << ") -> " << boxGoalMatching[i].first << "/" << boxGoalMatching[i].second << "-";
+		ii++;
+	}
+	std::cout << std::endl;
+
+	
+	for(Position pos:sortedBoxes)
+	{
+		std::cout << "(" << pos.first.first << "," << pos.first.second << ") -> ";
+
+		for(std::pair<int,int> p:pos.second) std::cout << "(" << p.first << "," << p.second << ")";
+		std::cout << std::endl;
+	}
+
 	for(unsigned int i=0;i<map->size();i++){
 		for(unsigned int j=0;j<(*map)[i].size();j++){
 			char c = (*map)[i][j];

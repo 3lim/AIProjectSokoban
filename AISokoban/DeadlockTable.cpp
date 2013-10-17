@@ -193,7 +193,7 @@ struct Node
 	int posToCompute;
 };
 
-void DeadlockTable::computeDeadlocks(int w, int h, std::set<std::string>& deadlocks)
+void DeadlockTable::computeDeadlocks(int w, int h, std::unordered_set<std::string>& deadlocks)
 {
 	std::queue<Node> toCompute;
 	std::string nStr(w*h,' ');
@@ -202,6 +202,10 @@ void DeadlockTable::computeDeadlocks(int w, int h, std::set<std::string>& deadlo
 	nStr[w + (w % 2 == 0 ? w / 2 : (w-1) / 2)] = '$';
 	
 	Node n = {nStr,0};
+	toCompute.push(n);
+
+	// In case pushing to a goal leads to a deadlock
+	n.pos[w + (w % 2 == 0 ? w / 2 : (w-1) / 2)] = '#';
 	toCompute.push(n);
 
 	int computed = 0;
@@ -235,7 +239,70 @@ void DeadlockTable::computeDeadlocks(int w, int h, std::set<std::string>& deadlo
 	//std::cout << "Computed " << deadlocks.size() << " deadlocks from " << computed << " positions" << std::endl;
 }
 
-void DeadlockTable::compileDeadlockTable(const std::string table,std::set<std::string>& deadlocks)
+void DeadlockTable::compileDeadlockTable(const std::string table,std::unordered_set<std::string>& deadlocks)
 {
 	for(int i=0;i<table.length();i+=DT_W*DT_H) deadlocks.insert(table.substr(i,DT_H*DT_W));
+}
+
+bool goalDeadlockCheck(std::string s)
+{
+	int p = s.find_first_of('*');
+
+	if(p != s.npos)
+	{
+		std::string n(s);
+		n[p] = '$';
+		bool boxDl = goalDeadlockCheck(n);
+		n[p] = '#';
+		bool wallDl = goalDeadlockCheck(n);
+
+		return boxDl && wallDl;
+	}
+	else
+	{
+		return DeadlockTable::checkForDeadlock(s);
+	}
+}
+
+bool DeadlockTable::checkForDeadlock(std::string s)
+{
+	int xDiff = (DT_W % 2 == 0 ? DT_W : DT_W-1) / 2;
+
+	std::string dlCheckReal(DT_H * DT_W,' ');
+	dlCheckReal[xDiff] = s[xDiff];
+	dlCheckReal[xDiff + DT_W] = s[xDiff + DT_W];
+
+	std::pair<std::string,int> start(dlCheckReal,0);
+	std::queue<std::pair<std::string,int>> dlQ;
+
+	dlQ.push(start);
+	while(!dlQ.empty())
+	{
+		std::pair<std::string,int> dl = dlQ.front();
+		dlQ.pop();
+		
+		if(dl.first.find('*') != dl.first.npos) 
+		{
+					/*std::cout << path.back() << "->" << movedBoxPos.first << "," << movedBoxPos.second << ": Found deadlock!" << std::endl;
+					Constants::printPos(dl.first,DT_W);
+					Constants::printPos(dlCheck,DT_W);*/
+			if(goalDeadlockCheck(dl.first)) return true;
+		}
+		else
+		{
+			if(Constants::deadlockTable.find(dl.first) != Constants::deadlockTable.end()) return true;
+		}
+
+		if(dl.second >= Constants::gridPositions.size()) continue;
+
+		if(dl.first[Constants::gridPositions[dl.second]] == ' ') 
+		{
+			std::pair<std::string,int> ndl(dl.first,dl.second+1);
+
+			ndl.first[Constants::gridPositions[dl.second]] = s[Constants::gridPositions[dl.second]];
+			dlQ.push(ndl);
+		}
+	}
+
+	return false;
 }

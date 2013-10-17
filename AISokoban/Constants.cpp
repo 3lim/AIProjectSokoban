@@ -2,7 +2,7 @@
 
 std::set<std::pair<int,int>> Constants::Goals;
 std::map<std::pair<int,int>,std::map<int,int>> Constants::pushablePositions;
-std::set<std::string> Constants::deadlockTable;
+std::unordered_set<std::string> Constants::deadlockTable;
 std::vector<int> Constants::gridPositions;
 
 std::pair<int,int> Constants::computeNextCircularPosition(int lX,int lY,int pPos)

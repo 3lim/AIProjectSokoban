@@ -71,10 +71,8 @@ void computePushablePositionData(std::set<std::pair<int,int>> goals, std::vector
 		
 		if(visited.find(std::pair<int,std::pair<int,int>>(node.origin,pos)) != visited.end()) 
 		{
-			int* dist = &positions[node.pos][node.origin];
-
-			if(*dist<=node.dist) continue;
-			else *dist = node.dist;
+			if(positions[node.pos][node.origin]<=node.dist) continue;
+			else positions[node.pos][node.origin] = node.dist;
 		}
 		else
 		{
@@ -108,7 +106,10 @@ void computePushablePositionData(std::set<std::pair<int,int>> goals, std::vector
 			q.push(n);
 		}
 
-		if(pushable) positions[pos][node.origin] = node.dist;
+		if(pushable) 
+		{
+			positions[pos][node.origin] = node.dist;
+		}
 	}
 }
 
@@ -122,6 +123,10 @@ int main(void)
 	
 	Constants::gridPositions = DeadlockTable::generateCircularPositions();
 	DeadlockTable::compileDeadlockTable(DT_DATA,Constants::deadlockTable);
+	DeadlockTable::compileDeadlockTable(DT_DATA2,Constants::deadlockTable);
+	DeadlockTable::compileDeadlockTable(DT_DATA3,Constants::deadlockTable);
+	DeadlockTable::compileDeadlockTable(DT_DATA4,Constants::deadlockTable);
+	DeadlockTable::compileDeadlockTable(DT_DATA5,Constants::deadlockTable);
 
 	// Uncomment for deadlock table generation
 	
@@ -132,15 +137,17 @@ int main(void)
 	// --- 
 
 	//std::stringstream ss;
-
 	//for(std::string s:board) ss << s;
 
 	//if(DeadlockTable::isDeadlock(ss.str(),DT_W)) std::wcout << "Deadlock!";
 	//else std::wcout << "No deadlock!";
 
 	//return 0;
+	
+	//std::stringstream ss;
+	//for(std::string s:board) ss << s;
 
-	//if(Constants::deadlockTable.find(ss.str())!=Constants::deadlockTable.end()) std::wcout << "Deadlock!";
+	//if(DeadlockTable::checkForDeadlock(ss.str())) std::wcout << "Deadlock!";
 	//else std::wcout << "No deadlock!";
 
 	//return 0;
@@ -189,7 +196,7 @@ int main(void)
 
 	//list of all seen states
 
-	std::set<State*> visitedStates;
+	std::unordered_set<State*> visitedStates;
 
 	//currentStates.push_back(initState);
 	currentStates.push(initState);
@@ -201,6 +208,8 @@ int main(void)
 		State* state = currentStates.top();
 
 		currentStates.pop();
+
+		//state->print();
 		
 		statesExpanded++;
 		//if(statesExpanded % 2000 == 0) std::cout << "States expanded: " << statesExpanded << std::endl;
