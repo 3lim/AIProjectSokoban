@@ -10,6 +10,7 @@
 #include <map>
 #include <sstream>
 #include "DeadlockTable.h"
+#include <conio.h>
 
 typedef struct {
 	std::pair<int,int> pos;
@@ -42,7 +43,8 @@ class comparison
 public:
   bool operator() (State* const &  lhs, State* const & rhs) const
   {
-	  return lhs->getPathLength()+lhs->getHeuristicValue()>rhs->getPathLength()+rhs->getHeuristicValue();
+	  //return lhs->getPathLength()+lhs->getHeuristicValue()>rhs->getPathLength()+rhs->getHeuristicValue();
+	  return lhs->getHeuristicValue()>rhs->getHeuristicValue();
   }
 };
 
@@ -80,38 +82,29 @@ void computePushablePositionData(std::set<std::pair<int,int>> goals, std::vector
 		{
 			visited.insert(std::pair<int,std::pair<int,int>>(node.origin,pos));
 		}
-
-		bool pushable = false;
 		
 		if(moveable(map[pos.second-1][pos.first]) && moveable(map[pos.second-2][pos.first])) 
 		{
-			pushable = true;
 			square_t n = {std::pair<int,int>(pos.first,pos.second-1),node.origin,node.dist+1};
 			q.push(n);
 		}
 		if(moveable(map[pos.second+1][pos.first]) && moveable(map[pos.second+2][pos.first])) 
 		{
-			pushable = true;
 			square_t n = {std::pair<int,int>(pos.first,pos.second+1),node.origin,node.dist+1};
 			q.push(n);
 		}
 		if(moveable(map[pos.second][pos.first-1]) && moveable(map[pos.second][pos.first-2])) 
 		{
-			pushable = true;
 			square_t n = {std::pair<int,int>(pos.first-1,pos.second),node.origin,node.dist+1};
 			q.push(n);
 		}
 		if(moveable(map[pos.second][pos.first+1]) && moveable(map[pos.second][pos.first+2])) 
 		{
-			pushable = true;
 			square_t n = {std::pair<int,int>(pos.first+1,pos.second),node.origin,node.dist+1};
 			q.push(n);
 		}
 
-		if(pushable) 
-		{
-			positions[pos][node.origin] = node.dist;
-		}
+		positions[pos][node.origin] = node.dist;
 	}
 }
 
@@ -211,6 +204,10 @@ int main(void)
 		currentStates.pop();
 
 		//state->print();
+
+		//while(!_kbhit());
+
+		//_getch();
 		
 		statesExpanded++;
 		/*if(statesExpanded % 2000 == 0){

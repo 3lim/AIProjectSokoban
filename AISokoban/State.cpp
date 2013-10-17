@@ -332,7 +332,7 @@ bool State::isWin()
 
 bool SortBoxes(Position a,Position b)
 {
-	return a.second.size()==b.second.size() ? a.second[0].second<b.second[0].second : a.second.size()<b.second.size();
+	return a.second.size()==b.second.size() && a.second.size()>0 ? a.second[0].second<b.second[0].second : a.second.size()<b.second.size();
 }
 
 bool SortDistances(std::pair<int,int> a,std::pair<int,int> b)
@@ -449,14 +449,25 @@ int State::matchingHeuristic()
 	matching.resize(pBoxes.size());
 
 	this->matchingFound = findMatching(0,pBoxes,matching);
-
-	for(int i=0;i<matching.size();i++) ret += matching[i].second;
-
+	
 
 	// For debugging
 	boxGoalMatching = matching;
 	sortedBoxes = pBoxes;
 	// --
+
+	if(!this->matchingFound) return boxes.size() * 100000;
+
+	std::vector<std::pair<int,int>> goals;
+	for(auto it=Constants::Goals.begin();it!=Constants::Goals.end();it++) goals.push_back(*it);
+
+	for(int i=0;i<matching.size();i++) 
+	{
+		auto it = Constants::Goals.begin();
+		std::advance(it,matching[i].first);
+		ret += (matching[i].second != 0 ? 2 * matching[i].second : 0) * Constants::pushablePositions[*it].size();
+	}
+
 
 	return ret;
 }
@@ -485,7 +496,7 @@ int State::getPathLength()
 
 void State::print()
 {
-	std::cout << hash << std::endl << "Boxes: ";
+	std::cout << heuristicValue << std::endl << hash << std::endl << "Boxes: ";
 	for(std::pair<int,int> b:boxes) std::cout << "(" << b.first << "," << b.second << ")";
 	std::cout << std::endl << "Player movement: " << upperLeftReachable.first << "," << upperLeftReachable.second << std::endl;
 	std::cout << "Matching: ";

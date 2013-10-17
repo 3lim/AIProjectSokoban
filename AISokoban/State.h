@@ -5,6 +5,7 @@
 #include <string>
 #include "DeadlockTable.h"
 #include "Constants.h"
+#include <iterator>
 
 typedef std::pair<std::pair<int,int>,std::vector<std::pair<int,int>>> Position;
 
