@@ -60,6 +60,7 @@ void computePushablePositionData(std::set<std::pair<int,int>> goals, std::vector
 {
 	std::queue<square_t> q;
 	std::set<std::pair<int,std::pair<int,int>>> visited;
+	std::set<std::pair<std::pair<int,int>,bool>> tunnelPoints;
 	int i=0;
 	for(auto it = goals.begin();it != goals.end();it++,i++) 
 	{
@@ -82,6 +83,16 @@ void computePushablePositionData(std::set<std::pair<int,int>> goals, std::vector
 		{
 			visited.insert(std::pair<int,std::pair<int,int>>(node.origin,pos));
 		}
+
+		if((!moveable(map[pos.second-1][pos.first]) && !moveable(map[pos.second+1][pos.first])))
+		{
+			tunnelPoints.insert(make_pair(pos,true));
+		}
+		else if(!moveable(map[pos.second][pos.first+1]) && !moveable(map[pos.second][pos.first-1]))
+		{
+			tunnelPoints.insert(make_pair(pos,false));
+		}
+		
 		
 		if(moveable(map[pos.second-1][pos.first]) && moveable(map[pos.second-2][pos.first])) 
 		{
@@ -106,9 +117,74 @@ void computePushablePositionData(std::set<std::pair<int,int>> goals, std::vector
 
 		positions[pos][node.origin] = node.dist;
 	}
+
+	Constants::tunnelP = tunnelPoints;
+	
+	auto toCheck = tunnelPoints.begin();
+	while(!tunnelPoints.empty())
+	{
+		tunnelPoints.erase(toCheck);
+		Tunnel t;
+		if(!toCheck->second)
+		{
+			t.p1 = std::pair<int,int>(toCheck->first.first,toCheck->first.second-1);
+			t.p2 = std::pair<int,int>(toCheck->first.first,toCheck->first.second+1);
+
+			auto it = tunnelPoints.find(std::pair<std::pair<int,int>,bool>(t.p1,false));
+			while(it!=tunnelPoints.end()) 
+			{
+				tunnelPoints.erase(it);
+				t.p1 = std::pair<int,int>(t.p1.first,t.p1.second-1);
+				it = tunnelPoints.find(std::pair<std::pair<int,int>,bool>(t.p1,false));
+			}
+			
+			it = tunnelPoints.find(std::pair<std::pair<int,int>,bool>(t.p2,false));
+			while(it!=tunnelPoints.end()) 
+			{
+				tunnelPoints.erase(it);
+				t.p2 = std::pair<int,int>(t.p2.first,t.p2.second+1);
+				it = tunnelPoints.find(std::pair<std::pair<int,int>,bool>(t.p2,false));
+			}
+			Constants::tunnels[t.p1].push_back(t);
+			Constants::tunnels[t.p2].push_back(t);
+		}
+		else
+		{
+			
+			t.p1 = std::pair<int,int>(toCheck->first.first-1,toCheck->first.second);
+			t.p2 = std::pair<int,int>(toCheck->first.first+1,toCheck->first.second);
+
+			auto it = tunnelPoints.find(std::pair<std::pair<int,int>,bool>(t.p1,true));
+			while(it!=tunnelPoints.end()) 
+			{
+				tunnelPoints.erase(it);
+				t.p1 = std::pair<int,int>(t.p1.first-1,t.p1.second);
+				it = tunnelPoints.find(std::pair<std::pair<int,int>,bool>(t.p1,true));
+			}
+			
+			it = tunnelPoints.find(std::pair<std::pair<int,int>,bool>(t.p2,true));
+			while(it!=tunnelPoints.end()) 
+			{
+				tunnelPoints.erase(it);
+				t.p2 = std::pair<int,int>(t.p2.first+1,t.p2.second);
+				it = tunnelPoints.find(std::pair<std::pair<int,int>,bool>(t.p2,true));
+			}
+			Constants::tunnels[t.p1].push_back(t);
+			Constants::tunnels[t.p2].push_back(t);
+		}
+		
+		toCheck = tunnelPoints.begin();
+	}
+
+	for(auto tu:Constants::tunnels)
+	{
+		std::cout << "(" << tu.first.first << "," << tu.first.second << "," << tu.second.size() << ")" << std::endl;
+		
+		while(!_kbhit());
+
+		_getch();
+	}
 }
-
-
 
 int main(void)
 {
@@ -179,7 +255,7 @@ int main(void)
 	}
 	
 	computePushablePositionData(goals,board,Constants::pushablePositions);
-	//std::cout << "Computed static position data" << std::endl;
+	std::cout << "Computed static position data" << std::endl;
 
 	State* initState = new State(&board,"",NULL,boxes,player);
 	Constants::Goals = goals;
@@ -203,11 +279,11 @@ int main(void)
 
 		currentStates.pop();
 
-		//state->print();
+		state->print();
 
-		//while(!_kbhit());
+		while(!_kbhit());
 
-		//_getch();
+		_getch();
 		
 		statesExpanded++;
 		/*if(statesExpanded % 2000 == 0){

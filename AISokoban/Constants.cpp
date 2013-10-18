@@ -4,6 +4,8 @@ std::set<std::pair<int,int>> Constants::Goals;
 std::map<std::pair<int,int>,std::map<int,int>> Constants::pushablePositions;
 std::unordered_set<std::string> Constants::deadlockTable;
 std::vector<int> Constants::gridPositions;
+std::map<std::pair<int,int>,std::vector<Tunnel>> Constants::tunnels;
+std::set<std::pair<std::pair<int,int>,bool>> Constants::tunnelP;
 
 std::pair<int,int> Constants::computeNextCircularPosition(int lX,int lY,int pPos)
 {
